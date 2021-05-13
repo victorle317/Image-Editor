@@ -37,9 +37,10 @@ class ImageProcessing {
     this.filters.brightness = this.brightness
     this.filters.threshold = this.threshold
     this.filters.convolute = this.convolute
+    this.filters.grayBalance = this.grayBalance
   }
   apply() {
-    this.ctx.putImageData(this.imgData, 0, 0);
+    this.ctx.putImageData(this.imgData,  0,0);
   }
 
   // bind this để bảo function, cái this ở trong function là object Imgprocessing chứ ko phải là CHÍNH CÁI FUNCTION đó và cái Object filters như trong kiểu khai báo brightness(){}
@@ -81,6 +82,88 @@ class ImageProcessing {
     return this;
   }.bind(this);
 
+  grayBalance = function (){
+    // doi luc phep toan ko dung dc do load fail, f5 lai
+    this.filters.grayScale().apply();
+    let ImgStatistic = {}; 
+    let ImgPDF = [];
+    let ImgCDF = [];
+    let newImgData = [];
+    let pixels = this.imgData.data;
+    let totalPixels = pixels.length/4;
+    // Thống kê số liệu
+    for (var i = 0; i < pixels.length; i += 4) {
+      var r = pixels[i];
+      if(r in ImgStatistic){
+        ImgStatistic[r]++;
+      }else{
+        ImgStatistic[r] = 1;
+      }
+      
+    }
+    // Tính pdf
+    for (const pixel in ImgStatistic){
+      let pdf = ImgStatistic[pixel]/totalPixels;
+      // console.log(pdf);
+      let object = {
+        key: pixel,
+        value: pdf,
+      }
+      ImgPDF.push(object);
+    }
+    // console.log(ImgPDF);
+
+    // tinh cdf
+    for (let i = 0; i < ImgPDF.length;i++ ){
+      if(i == 0){
+        ImgCDF.push(ImgPDF[i]);
+        // chưa push đc hay sao ấy nên lỗi
+      }else{
+        let object = {
+          key : ImgPDF[i].key,
+          value : ImgCDF[i-1].value + ImgPDF[i].value,
+        }
+        ImgCDF.push(object);
+      }
+    }
+
+    for (let i = 0; i < ImgCDF.length; i++) {
+      newImgData[i] = {
+        old: ImgCDF[i].key,
+        new: ImgCDF[i].value * ImgCDF[ImgCDF.length-1].key
+      }
+    }
+    // return ve anh
+    
+    for (var i = 0; i < pixels.length; i += 4) {
+      let r = pixels[i];
+      let g = pixels[i+1];
+      let b = pixels[i+2];
+      for (let j = 0; j < newImgData.length; j++) {
+        if(r == newImgData[j].old){
+          // if(r == 99){
+          //   console.log("OLD: " + r)
+          //   console.log("NEW: " + newImgData[j].new);
+          // }
+          pixels[i] = pixels[i+1] = pixels[i+2] = newImgData[j].new;
+        }
+      }
+    }
+    // console.log(ImgCDF);
+   console.log("THỐNG KÊ LẠI")
+   console.log("STATISTIC:");
+   console.log(ImgStatistic);
+   console.log("PDF: ");
+   console.log(ImgPDF);
+   console.log("CDF: ");
+   console.log(ImgCDF);
+   console.log("New value is:");
+   console.log(newImgData);
+   console.log("Lưu ảnh:")
+   console.log(pixels);
+
+    return this;
+  }.bind(this);
   // thuật toán này đ hiểu đại khái hàm này là hàm tích chập nhận ma trận 
   // tham khảo tại đây https://www.html5rocks.com/en/tutorials/canvas/imagefilters/
   convolute = function (weights, opaque) {
@@ -132,11 +215,16 @@ class ImageProcessing {
   }.bind(this);
    // truyền mặc định tham sô pixels 
 }
-var x = new ImageProcessing()
+var x = new ImageProcessing();
 
-x.filters.grayScale().apply()
-x.filters.brightness(10).apply()
-x.filters.threshold(60).apply()
+// x.filters.brightness(15).apply();
+x.filters.grayBalance().apply();
+// x.filters.grayScale().apply();
+
+// console.log(x.imgData.data);
+
+
+// x.filters.threshold(60).apply()
 // x.filters.convolute(
 // [1 / 9, 1 / 9, 1 / 9,
 // 1 / 9, 1 / 9, 1 / 9,
