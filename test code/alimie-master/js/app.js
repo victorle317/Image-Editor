@@ -28,8 +28,9 @@ $('.side_bar .nav .nav-item .nav-link').hover(function () {
  })
 
 $('.adjust_bar').hover(function () {
-    $(this).toggleClass('adjust_bar_hover')
-    $('.side_bar').toggleClass('side_bar_toggle')
+    console.log('1');
+    $(this).addClass('adjust_bar_hover')
+    $('.side_bar').addClass('side_bar_toggle')
     $('.side_bar > *').last().toggleClass('d-none')
 
 })
@@ -39,12 +40,15 @@ $('.adjust_bar').mouseleave(function(){
             el.classList.remove('nav_link_enter')
         }
     })
+    $('.adjust_bar').removeClass('adjust_bar_hover')
 })
 
-$('.tool_bar').hover(function () {
-    $('.side_bar').toggleClass('side_bar_toggle')
-})
-
+// $('.tool_bar').hover(function () {
+//     $('.side_bar').toggleClass('side_bar_toggle')
+// })
+// $('.side_bar').hover(function () {
+//     $('.side_bar').addClass('side_bar_toggle')
+// })
 
 function Input_update(el) {
     el.parentNode.querySelector('div > span').innerHTML = el.value
@@ -65,3 +69,6 @@ function Input_change() {
 }
 
 Input_change()
+
+// fix bug (tạm vậy :v)
+$('.side_bar').addClass('side_bar_toggle')

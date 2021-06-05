@@ -37,6 +37,7 @@
     height: calc(100vh - 72px);
 }
 .adjust_bar{
+    // z-index: 1;
     position: absolute;
     left: -20rem;
     width: 20rem;
@@ -56,8 +57,9 @@
 .grayscale{
     filter: grayscale(1);
 }
-.container > div >canvas {
-     position: absolute;
+.container > div > canvas {
+      z-index: -100;
+      position: absolute;
       top: 0;
       width: 100%;
       height: 100%;
