@@ -217,8 +217,8 @@ class ImageProcessing {
 }
 var x = new ImageProcessing();
 
-// x.filters.brightness(15).apply();
-x.filters.grayBalance().apply();
+// x.filters.brightness(250).apply();
+// x.filters.grayBalance().apply();
 // x.filters.grayScale().apply();
 
 // console.log(x.imgData.data);

@@ -748,8 +748,8 @@ function example(quality) {
     document.body.appendChild(img);
 }
 
-let encoder = new JPEGEncoder(1)
-example(1)
+let encoder = new JPEGEncoder(20)
+example(20)
 
 
 // example(50)
