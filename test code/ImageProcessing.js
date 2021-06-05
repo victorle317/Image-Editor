@@ -31,6 +31,9 @@ class ImageProcessing {
     this.imgData = this.ctx.getImageData(0, 0, this.imgSrc.naturalWidth, this.imgSrc.naturalHeight)
     console.log(this.imgData)
   }
+  saveIMG(){
+    
+  }
   init() {
     // gắn các hàm vào filters , để ở đây tạo api luôn
     this.filters.grayScale = this.grayScale
