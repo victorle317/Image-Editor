@@ -101,6 +101,10 @@ function JPEGEncoder(quality) {
     ];
 
     function initConstantForFDCT(){
+        // tạo tính trước sẵn các giá trị để dùng trong 
+        // biến đổi cousin rời rạc phiên bản nhanh
+        // bởi arai, agui, và naka...
+        // thuật toán AAN 
         for (var i = 1; i < 8; i++) {
             let c = Math.cos(i*Math.PI/16);
             arrayC.push(c);
@@ -126,7 +130,8 @@ function JPEGEncoder(quality) {
             49, 64, 78, 87, 103, 121, 120, 101,
             72, 92, 95, 98, 112, 100, 103, 99
         ];
-
+        // công thức tính bảng lượng tử theo quality, nếu quality = 50 thì bảng YQT coi như giữ nguyên
+        // sau khi tính với công thức dưới
         for (var i = 0; i < 64; i++) {
             var t = ffloor((YQT[i] * sf + 50) / 100);
             if (t < 1) {
@@ -166,23 +171,37 @@ function JPEGEncoder(quality) {
     }
 
     function computeHuffmanTbl(nrcodes, std_table) {
+        // nrcodes: mảng chứa các giá trị mà tổng các giá trị đó sẽ là lần tính 
+        // std_table : chiều dài mảng này sẽ bằng tổng giá trị trên
+        // bảng std_table truyền vào là các index của bảng huffman, tức 
+        // là về sau dựa vào bảng std_table này để ghi vào vị trí như 1,5,2,3,4 kiểu v, ko 
+        // theo thứ tự mà theo thứ tự quy định trong std_table
         var codevalue = 0;
         var pos_in_table = 0;
         var HT = new Array();
         for (var k = 1; k <= 16; k++) {
             for (var j = 1; j <= nrcodes[k]; j++) {
                 HT[std_table[pos_in_table]] = [];
-                HT[std_table[pos_in_table]][0] = codevalue;
-                HT[std_table[pos_in_table]][1] = k;
+                HT[std_table[pos_in_table]][0] = codevalue; // giá trị, ví dụ: 0101
+                HT[std_table[pos_in_table]][1] = k; // ví dụ : 5 tức là chứa đc 2^5 kí tự
+                // tăng vị trí trong bảng thôi, vì bảng std_table phản ánh 
+                // vị trí trong bảng huffman, 1 vị trí ko thể có 2 giá trị
                 pos_in_table++;
                 codevalue++;
             }
             codevalue *= 2;
+            // sau mỗi lần bit tăng lên, thì giá trị cx nên dịch thêm 1 mũ tức x2
+            // vì chẳng hạn 01 mà vào chỗ tính 8 bit thì rất dễ hỏng
         }
         return HT;
     }
 
     function initHuffmanTbl() {
+        // truyền các tiêu chuẩn bảng huffman có được
+        // vì có sẵn là do lấy thông tin từ sách
+        // các bảng này đã được hình thành là nhờ tập dữ liệu vô cùng
+        // lớn của nhiều nơi
+        // NCL: bảng có sẵn
         YDC_HT = computeHuffmanTbl(std_dc_luminance_nrcodes, std_dc_luminance_values);
         UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes, std_dc_chrominance_values);
         YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes, std_ac_luminance_values);
@@ -194,6 +213,7 @@ function JPEGEncoder(quality) {
         var nrupper = 2;
         for (var cat = 1; cat <= 15; cat++) {
             //Positive numbers
+            // tạo nửa trước nửa lớn hơn
             for (var nr = nrlower; nr < nrupper; nr++) {
                 category[32767 + nr] = cat;
                 bitcode[32767 + nr] = [];
@@ -201,7 +221,9 @@ function JPEGEncoder(quality) {
                 bitcode[32767 + nr][0] = nr;
             }
             //Negative numbers
+            // tạo nửa sau nửa bé hơn
             for (var nrneg = -(nrupper - 1); nrneg <= -nrlower; nrneg++) {
+                // vòng for với nrneg âm
                 category[32767 + nrneg] = cat;
                 bitcode[32767 + nrneg] = [];
                 bitcode[32767 + nrneg][1] = cat;
@@ -216,20 +238,42 @@ function JPEGEncoder(quality) {
 
     // IO functions
     function writeBits(bs) {
-        var value = bs[0];
-        var posval = bs[1] - 1;
+        // nhận vào mảng 2 phần tử
+        var value = bs[0]; // phần tử đầu là giá trị: ví dụ 15
+        var posval = bs[1] - 1;  // phần tử thứ 2 là độ sâu: ví dụ 4
+        // => từ 2 cmt trên ta có thể thấy 2^4 chứa 16 giá trị, 15 là 1 trong các giá trị đó
+        // => còn nhiều giá trị khác từ 0 đến 15 với độ sâu 4
         while (posval >= 0) {
+            // kiểm tra value thuộc khoảng 1 << posval đến (1 << posval + 1) -1
+            // ví dụ posval đang là 4 tức là
+            // 1 << 4 = 16 vậy là kiểm tra value
+            // từ 16 đến 31
+            // cx có thể nói
+            // đây là kiểm tra value trong khoảng từ (bằng 2^posval đến nhỏ hơn 2^posval + posval)
             if (value & (1 << posval)) {
+                // posval vốn là độ sâu 
+                // 1 << posval là tính ra tổng số giá trị của posval đó có được
+                // ví dụ : 1 << 4 => 2^4 = 16 giá trị
                 bytenew |= (1 << bytepos);
+
             }
             posval--;
             bytepos--;
+            // chỉ ghi writeByte khi bytepos <0
+            // bytepos vốn sau 1 lần ghi set thành 7
+            // nên là sau 8 bit thì được ghi byte đó
+            // ở đây hiểu cứ 8 bit thì đc ghi 1 byte
             if (bytepos < 0) {
                 if (bytenew == 0xFF) {
+                    // chỉ là để tránh nhầm lẫn với các marker
+                    // vốn có dạng 0xFF và gì đó như CA :0xFFCA chẳng hạn
+                    // thì sau khi ghi byte đó phải padding thêm 00 để 
+                    // tránh nhầm lẫn, thế thôi
                     writeByte(0xFF);
                     writeByte(0);
                 }
                 else {
+                    // khác thì cứ ghi đi ko ai cấm
                     writeByte(bytenew);
                 }
                 bytepos = 7;
@@ -239,16 +283,26 @@ function JPEGEncoder(quality) {
     }
 
     function writeByte(value) {
-        byteout.push(clt[value]); // write char directly instead of converting later
+        // value nhận vào giá trị từ 0 đến 255
+        // clt chứa bảng mã ascii hay utf16 theo thứ tự từ 0 đến 255
+        byteout.push(clt[value]);
     }
 
     function writeWord(value) {
+        // chỉ lưu 2^8 1 lần
+        // mà truyền vào là 16 bit
+        // nên dịch 8 bit 
+        // lưu 8 bit trước
         writeByte((value >> 8) & 0xFF);
+        // lưu 8 bit sau
         writeByte((value) & 0xFF);
     }
 
 
     function fDCTQuant(data, fdtbl) {
+        // có gì không hiểu xem
+        // biến đổi dct nhanh
+        // https://web.stanford.edu/class/ee398a/handouts/lectures/07-TransformCoding.pdf#page=30
         var d0, d1, d2, d3, d4, d5, d6, d7;
         // xử lí theo hàng
         var dataOff = 0;
@@ -372,13 +426,11 @@ function JPEGEncoder(quality) {
             // cột tiếp theo
             dataOff++; 
         }
-
-
         var fDCTQuant;
         var k = 0;
         for (var row = 0; row < 8; row++) {
             for (var col = 0; col < 8; col++) {
-                // scale factor
+                // scale factor 
                 fDCTQuant = (data[k]/fdtbl[k]) * scaleFactors[col] * scaleFactors[row];
                 outputfDCTQuant[k] = fround(fDCTQuant);
                 k++;
