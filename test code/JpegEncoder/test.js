@@ -10,6 +10,15 @@ function JPEGEncoder(quality) {
     var UVDC_HT;
     var YAC_HT;
     var UVAC_HT;
+    
+    var scaleFactors = [1/(2*Math.sqrt(2))];
+    var arrayC = [];
+    var a1;
+    var a2;
+    var a3;
+    var a4;
+    var a5;
+
 
     var bitcode = new Array(65535);
     var category = new Array(65535);
@@ -23,9 +32,9 @@ function JPEGEncoder(quality) {
     var UDU = new Array(64);
     var VDU = new Array(64);
     var clt = new Array(256);
-    var RGB_YUV_TABLE = new Array(2048);
+ 
     var currentQuality;
-
+    var know = 3;
     var ZigZag = [
         0, 1, 5, 6, 14, 15, 27, 28,
         2, 4, 7, 13, 16, 26, 29, 42,
@@ -91,6 +100,21 @@ function JPEGEncoder(quality) {
         0xf9, 0xfa
     ];
 
+    function initConstantForFDCT(){
+        for (var i = 1; i < 8; i++) {
+            let c = Math.cos(i*Math.PI/16);
+            arrayC.push(c);
+            scaleFactors.push(1/(4*c));
+        }
+        // mảng arrayC tính từ index 0 mà theo cthuc thì lệch -1 index xuống cho đúng
+        a1 = arrayC[3];
+        a2 = arrayC[1] - arrayC[5];
+        a3 = arrayC[3];
+        a4 = arrayC[5] + arrayC[1];
+        a5 = arrayC[5];
+    
+    }
+
     function initQuantTables(sf) {
         var YQT = [
             16, 11, 10, 16, 24, 40, 51, 61,
@@ -131,15 +155,11 @@ function JPEGEncoder(quality) {
             }
             UVTable[ZigZag[j]] = u;
         }
-        var aasf = [
-            1.0, 1.387039845, 1.306562965, 1.175875602,
-            1.0, 0.785694958, 0.541196100, 0.275899379
-        ];
         var k = 0;
         for (var row = 0; row < 8; row++) {
             for (var col = 0; col < 8; col++) {
-                fdtbl_Y[k] = (1.0 / (YTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
-                fdtbl_UV[k] = (1.0 / (UVTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
+                fdtbl_Y[k] = YTable[ZigZag[k]];
+                fdtbl_UV[k] = UVTable[ZigZag[k]];
                 k++;
             }
         }
@@ -192,18 +212,7 @@ function JPEGEncoder(quality) {
         }
     }
 
-    function initRGBYUVTable() {
-        for (var i = 0; i < 256; i++) {
-            RGB_YUV_TABLE[i] = 19595 * i;
-            RGB_YUV_TABLE[(i + 256) >> 0] = 38470 * i;
-            RGB_YUV_TABLE[(i + 512) >> 0] = 7471 * i + 0x8000;
-            RGB_YUV_TABLE[(i + 768) >> 0] = -11059 * i;
-            RGB_YUV_TABLE[(i + 1024) >> 0] = -21709 * i;
-            RGB_YUV_TABLE[(i + 1280) >> 0] = 32768 * i + 0x807FFF;
-            RGB_YUV_TABLE[(i + 1536) >> 0] = -27439 * i;
-            RGB_YUV_TABLE[(i + 1792) >> 0] = - 5329 * i;
-        }
-    }
+
 
     // IO functions
     function writeBits(bs) {
@@ -238,15 +247,13 @@ function JPEGEncoder(quality) {
         writeByte((value) & 0xFF);
     }
 
-    // DCT & quantization core
+
     function fDCTQuant(data, fdtbl) {
         var d0, d1, d2, d3, d4, d5, d6, d7;
-        /* Pass 1: process rows. */
+        // xử lí theo hàng
         var dataOff = 0;
         var i;
-        const I8 = 8;
-        const I64 = 64;
-        for (i = 0; i < I8; ++i) {
+        for (i = 0; i < 8; ++i) {
             d0 = data[dataOff];
             d1 = data[dataOff + 1];
             d2 = data[dataOff + 2];
@@ -256,61 +263,67 @@ function JPEGEncoder(quality) {
             d6 = data[dataOff + 6];
             d7 = data[dataOff + 7];
 
+            // step 1: 
             var tmp0 = d0 + d7;
-            var tmp7 = d0 - d7;
             var tmp1 = d1 + d6;
-            var tmp6 = d1 - d6;
             var tmp2 = d2 + d5;
-            var tmp5 = d2 - d5;
             var tmp3 = d3 + d4;
             var tmp4 = d3 - d4;
+            var tmp5 = d2 - d5;
+            var tmp6 = d1 - d6;
+            var tmp7 = d0 - d7;
 
-            /* Even part */
-            var tmp10 = tmp0 + tmp3;    /* phase 2 */
+            //step 2
+            var tmp10 = tmp0 + tmp3;    
             var tmp13 = tmp0 - tmp3;
             var tmp11 = tmp1 + tmp2;
             var tmp12 = tmp1 - tmp2;
 
-            data[dataOff] = tmp10 + tmp11; /* phase 3 */
+            // step 3
+            data[dataOff] = tmp10 + tmp11; 
             data[dataOff + 4] = tmp10 - tmp11;
 
-            var z1 = (tmp12 + tmp13) * 0.707106781; /* c4 */
-            data[dataOff + 2] = tmp13 + z1; /* phase 5 */
+            var z1 = (tmp12 + tmp13) * a1;
+            //step 5
+            data[dataOff + 2] = tmp13 + z1; 
             data[dataOff + 6] = tmp13 - z1;
 
-            /* Odd part */
-            tmp10 = tmp4 + tmp5; /* phase 2 */
+           //step 2
+            tmp10 = tmp4 + tmp5; 
             tmp11 = tmp5 + tmp6;
             tmp12 = tmp6 + tmp7;
 
-            /* The rotator is modified from fig 4-8 to avoid extra negations. */
-            var z5 = (tmp10 - tmp12) * 0.382683433; /* c6 */
-            var z2 = 0.541196100 * tmp10 + z5; /* c2-c6 */
-            var z4 = 1.306562965 * tmp12 + z5; /* c2+c6 */
-            var z3 = tmp11 * 0.707106781; /* c4 */
+            var z5 = (tmp10 - tmp12) * a5;
+            var z2 = a2 * tmp10 + z5;
+            var z4 = a4 * tmp12 + z5; 
+            var z3 = tmp11 * a3; 
 
-            var z11 = tmp7 + z3;    /* phase 5 */
+            // step 5
+            var z11 = tmp7 + z3;   
             var z13 = tmp7 - z3;
 
-            data[dataOff + 5] = z13 + z2;    /* phase 6 */
+
+            // step6
+            data[dataOff + 5] = z13 + z2;    
             data[dataOff + 3] = z13 - z2;
             data[dataOff + 1] = z11 + z4;
             data[dataOff + 7] = z11 - z4;
 
-            dataOff += 8; /* advance pointer to next row */
+            // dịch tiếp hàng tiếp
+            dataOff += 8; 
         }
 
-        /* Pass 2: process columns. */
+        // xử lí theo cột
         dataOff = 0;
-        for (i = 0; i < I8; ++i) {
+        for (i = 0; i < 8; ++i) {
             d0 = data[dataOff];
             d1 = data[dataOff + 8];
-            d2 = data[dataOff + 16];
-            d3 = data[dataOff + 24];
-            d4 = data[dataOff + 32];
-            d5 = data[dataOff + 40];
-            d6 = data[dataOff + 48];
-            d7 = data[dataOff + 56];
+            d2 = data[dataOff + 8*2];
+            d3 = data[dataOff + 8*3];
+            d4 = data[dataOff + 8*4];
+            d5 = data[dataOff + 8*5];
+            d6 = data[dataOff + 8*6];
+            d7 = data[dataOff + 8*7];
 
             var tmp0p2 = d0 + d7;
             var tmp7p2 = d0 - d7;
@@ -321,49 +334,57 @@ function JPEGEncoder(quality) {
             var tmp3p2 = d3 + d4;
             var tmp4p2 = d3 - d4;
 
-            /* Even part */
-            var tmp10p2 = tmp0p2 + tmp3p2;    /* phase 2 */
+            // step 2
+            var tmp10p2 = tmp0p2 + tmp3p2;    
             var tmp13p2 = tmp0p2 - tmp3p2;
             var tmp11p2 = tmp1p2 + tmp2p2;
             var tmp12p2 = tmp1p2 - tmp2p2;
 
-            data[dataOff] = tmp10p2 + tmp11p2; /* phase 3 */
-            data[dataOff + 32] = tmp10p2 - tmp11p2;
+            // step 3
+            data[dataOff] = tmp10p2 + tmp11p2; 
+            data[dataOff + 8*4] = tmp10p2 - tmp11p2;
 
-            var z1p2 = (tmp12p2 + tmp13p2) * 0.707106781; /* c4 */
-            data[dataOff + 16] = tmp13p2 + z1p2; /* phase 5 */
-            data[dataOff + 48] = tmp13p2 - z1p2;
+            var z1p2 = (tmp12p2 + tmp13p2) * a1; 
+            // step 5
+            data[dataOff + 8*2] = tmp13p2 + z1p2; 
+            data[dataOff + 8*6] = tmp13p2 - z1p2;
 
-            /* Odd part */
-            tmp10p2 = tmp4p2 + tmp5p2; /* phase 2 */
+            // step 2
+            tmp10p2 = tmp4p2 + tmp5p2; 
             tmp11p2 = tmp5p2 + tmp6p2;
             tmp12p2 = tmp6p2 + tmp7p2;
 
-            /* The rotator is modified from fig 4-8 to avoid extra negations. */
-            var z5p2 = (tmp10p2 - tmp12p2) * 0.382683433; /* c6 */
-            var z2p2 = 0.541196100 * tmp10p2 + z5p2; /* c2-c6 */
-            var z4p2 = 1.306562965 * tmp12p2 + z5p2; /* c2+c6 */
-            var z3p2 = tmp11p2 * 0.707106781; /* c4 */
-            var z11p2 = tmp7p2 + z3p2;    /* phase 5 */
+    
+            var z5p2 = (tmp10p2 - tmp12p2) * a5; 
+            var z2p2 = a2 * tmp10p2 + z5p2; 
+            var z4p2 = a4 * tmp12p2 + z5p2; 
+            var z3p2 = tmp11p2 * a3; 
+            // step 5
+            var z11p2 = tmp7p2 + z3p2;
             var z13p2 = tmp7p2 - z3p2;
 
-            data[dataOff + 40] = z13p2 + z2p2; /* phase 6 */
-            data[dataOff + 24] = z13p2 - z2p2;
-            data[dataOff + 8] = z11p2 + z4p2;
-            data[dataOff + 56] = z11p2 - z4p2;
+            // step 6
+            data[dataOff + 8*5] = z13p2 + z2p2; 
+            data[dataOff + 8*3] = z13p2 - z2p2;
+            data[dataOff + 8*1] = z11p2 + z4p2;
+            data[dataOff + 8*7] = z11p2 - z4p2;
 
-            dataOff++; /* advance pointer to next column */
+            // cột tiếp theo
+            dataOff++; 
         }
 
-        // Quantize/descale the coefficients
+
         var fDCTQuant;
-        for (i = 0; i < I64; ++i) {
-            // Apply the quantization and scaling factor & Round to nearest integer
-            fDCTQuant = data[i] * fdtbl[i];
-            outputfDCTQuant[i] = (fDCTQuant > 0.0) ? ((fDCTQuant + 0.5) | 0) : ((fDCTQuant - 0.5) | 0);
-            //outputfDCTQuant[i] = fround(fDCTQuant);
-
+        var k = 0;
+        for (var row = 0; row < 8; row++) {
+            for (var col = 0; col < 8; col++) {
+                // scale factor
+                fDCTQuant = (data[k]/fdtbl[k]) * scaleFactors[col] * scaleFactors[row];
+                outputfDCTQuant[k] = fround(fDCTQuant);
+                k++;
+            }
         }
+
         return outputfDCTQuant;
     }
 
@@ -474,23 +495,31 @@ function JPEGEncoder(quality) {
         const I16 = 16;
         const I63 = 63;
         const I64 = 64;
+        // data từng pixel sau khi FDCT và Quantization
         var DU_DCT = fDCTQuant(CDU, fdtbl);
-        //ZigZag reorder
+
+        //ZigZag lại data
         for (var j = 0; j < I64; ++j) {
             DU[ZigZag[j]] = DU_DCT[j];
         }
+        // so sánh 2 dc hiện tại và trước đó
+        // DU[0] là dc của hiện tại, DC là dc block trước
         var Diff = DU[0] - DC; DC = DU[0];
         //Encode DC
         if (Diff == 0) {
             writeBits(HTDC[0]); // Diff might be 0
         } else {
             pos = 32767 + Diff;
+        
             writeBits(HTDC[category[pos]]);
             writeBits(bitcode[pos]);
         }
         //Encode ACs
         var end0pos = 63; // was const... which is crazy
-        for (; (end0pos > 0) && (DU[end0pos] == 0); end0pos--) { };
+        while (end0pos > 0 && (DU[end0pos] ==0)){
+            end0pos--;
+        }
+        // for (; (end0pos > 0) && (DU[end0pos] == 0); end0pos--) { };
         //end0pos = first element in reverse order !=0
         if (end0pos == 0) {
             writeBits(EOB);
@@ -502,6 +531,7 @@ function JPEGEncoder(quality) {
             var startpos = i;
             for (; (DU[i] == 0) && (i <= end0pos); ++i) { }
             var nrzeroes = i - startpos;
+            // nếu nrzeros lớn hơn 16, dịch lại 16 bit để giảm
             if (nrzeroes >= I16) {
                 lng = nrzeroes >> 4;
                 for (var nrmarker = 1; nrmarker <= lng; ++nrmarker)
@@ -590,17 +620,10 @@ function JPEGEncoder(quality) {
                     g = imageData[p++];
                     b = imageData[p++];
 
-                    /* // calculate YUV values dynamically
+                    // calculate YUV values dynamically
                     YDU[pos]=((( 0.29900)*r+( 0.58700)*g+( 0.11400)*b))-128; //-0x80
                     UDU[pos]=(((-0.16874)*r+(-0.33126)*g+( 0.50000)*b));
                     VDU[pos]=((( 0.50000)*r+(-0.41869)*g+(-0.08131)*b));
-                    */
-
-                    // use lookup table (slightly faster)
-                    YDU[pos] = ((RGB_YUV_TABLE[r] + RGB_YUV_TABLE[(g + 256) >> 0] + RGB_YUV_TABLE[(b + 512) >> 0]) >> 16) - 128;
-                    UDU[pos] = ((RGB_YUV_TABLE[(r + 768) >> 0] + RGB_YUV_TABLE[(g + 1024) >> 0] + RGB_YUV_TABLE[(b + 1280) >> 0]) >> 16) - 128;
-                    VDU[pos] = ((RGB_YUV_TABLE[(r + 1280) >> 0] + RGB_YUV_TABLE[(g + 1536) >> 0] + RGB_YUV_TABLE[(b + 1792) >> 0]) >> 16) - 128;
-
                 }
 
                 DCY = processDU(YDU, fdtbl_Y, DCY, YDC_HT, YAC_HT);
@@ -647,7 +670,7 @@ function JPEGEncoder(quality) {
 
         // benchmarking
         var duration = new Date().getTime() - time_start;
-        console.log('Encoding time: ' + duration + 'ms');
+        console.log('Thời gian nén: ' + duration + 'ms');
 
         return jpegDataUri
     }
@@ -671,21 +694,20 @@ function JPEGEncoder(quality) {
 
         initQuantTables(sf);
         currentQuality = quality;
-        console.log('Quality set to: ' + quality + '%');
+        console.log('Chất lượng ảnh: ' + quality + '%');
     }
 
     function init() {
         var time_start = new Date().getTime();
         if (!quality) quality = 50;
         // Create tables
+        initConstantForFDCT()
         initCharLookupTable()
         initHuffmanTbl();
         initCategoryNumber();
-        initRGBYUVTable();
-
         setQuality(quality);
         var duration = new Date().getTime() - time_start;
-        console.log('Initialization ' + duration + 'ms');
+        console.log('Khởi tạo mất: ' + duration + 'ms');
     }
 
     init();
@@ -707,12 +729,12 @@ function example(quality) {
         var img = document.createElement('img');
         img.src = jpegURI;
         document.body.appendChild(img);
-    },100);
+    },1000);
 
 }
 
-let encoder = new JPEGEncoder(20)
-example(20)
+let encoder = new JPEGEncoder(10)
+example(10)
 
 
 // example(50)
