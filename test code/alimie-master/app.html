@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Title -->
+    <title>App</title>
+
+    <!-- Favicon -->
+
+    <link rel="icon" href="./img/core-img/favicon.png">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./fonts/open-iconic-master/font/css/open-iconic.css">
+    <!-- <link rel="stylesheet" href="./nouislider.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="custom.css">
+
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader"></div>
+    </div>
+    <!-- /Preloader -->
+    <!-- Top Search Form Area -->
+    <div class="top-search-area">
+        <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <!-- Close -->
+                        <button type="button" class="btn close-btn" data-dismiss="modal"><i
+                                class="ti-close"></i></button>
+                        <!-- Form -->
+                        <form action="index.html" method="post">
+                            <input type="search" name="top-search-bar" class="form-control"
+                                placeholder="Search and hit enter...">
+                            <button type="submit">Search</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Area Start -->
+    <header class="header-area d-none">
+        <!-- Main Header Start -->
+        <div class="main-header-area">
+            <div class="classy-nav-container breakpoint-off">
+                <div class="container">
+                    <!-- Classy Menu -->
+                    <nav class="classy-navbar justify-content-between" id="alimeNav">
+
+                        <!-- Logo -->
+                        <a class="nav-brand" href="./index.html"><img src="./img/core-img/logo.png" alt=""></a>
+
+                        <!-- Navbar Toggler -->
+                        <div class="classy-navbar-toggler">
+                            <span class="navbarToggler"><span></span><span></span><span></span></span>
+                        </div>
+
+                        <!-- Menu -->
+                        <div class="classy-menu">
+                            <!-- Menu Close Button -->
+                            <div class="classycloseIcon">
+                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
+                            </div>
+                            <!-- Nav Start -->
+                            <div class="classynav">
+                                <ul id="nav">
+                                    <li><a href="./index.html">Home</a></li>
+                                    <li><a href="#">Pages</a>
+                                        <ul class="dropdown">
+                                            <li><a href="./index.html">- Home</a></li>
+                                            <li><a href="./about.html">- About</a></li>
+                                            <li><a href="./gallery.html">- Gallery</a></li>
+                                            <li><a href="./blog.html">- Blog</a></li>
+                                            <li><a href="./single-blog.html">- Blog Details</a></li>
+                                            <li><a href="./contact.html">- Contact</a></li>
+                                            <li><a href="#">- Dropdown</a>
+                                                <ul class="dropdown">
+                                                    <li><a href="#">- Dropdown Item</a></li>
+                                                    <li><a href="#">- Dropdown Item</a></li>
+                                                    <li><a href="#">- Dropdown Item</a></li>
+                                                    <li><a href="#">- Dropdown Item</a></li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="active"><a href="./about.html">About</a></li>
+                                    <li><a href="./gallery.html">Gallery</a></li>
+                                    <li><a href="./blog.html">Blog</a></li>
+                                    <li><a href="./contact.html">Contact</a></li>
+                                </ul>
+
+                                <!-- Search Icon -->
+                                <div class="search-icon" data-toggle="modal" data-target="#searchModal"><i
+                                        class="ti-search"></i></div>
+                            </div>
+                            <!-- Nav End -->
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Header Area End -->
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalCenterTitle">Import your file here</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="input_type">Choose input type</label>
+                        <select class="form-control" id="input_type" >
+                            <!-- <option value="none" selected disabled hidden>
+                                Select an Option
+                            </option> -->
+                            <option value="url">URL</option>
+                            <option value="file">File</option>
+                        </select>
+                        <div class="url mt-2 ">
+                            <label for="url">Image's URL</label>
+                            <input class="form-control" type="text" placeholder="Place your image's URL here" id="url">
+                        </div>
+                        <div class="file mt-2 d-none">
+                            <label for="file">Browse image file</label>
+                            <input class="form-control d-none" type="text" placeholder="Place your image file here" id="file">
+                            <div class="input-group">
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="file" aria-describedby="inputGroupFileAddon04">
+                                    <label class="custom-file-label" for="file">Choose file</label>
+                                </div>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="file">Button</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <header>
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container py-2">
+                <!-- <img style="color: white;" src="https://svgsilh.com/svg/1296797.svg"></img> -->
+                <a class="navbar-brand" href="#"><i class="fas fa-camera-retro mr-1"></i> Snapshot</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mx-auto">
+                        <li class="nav-item active mx-2">
+                            <a class="nav-link" href="#" data-toggle="modal" data-target="#exampleModalCenter">Open
+                                <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item mx-2 text-center">
+                            <a class="nav-link" href="#"><span class="oi mr-1 d-none"
+                                    data-glyph="arrow-left"></span>Before
+
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown d-none">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Dropdown
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                            </div>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a class="nav-link" href="#" tabindex="-1" aria-disabled="true">After<span
+                                    class="oi ml-1 d-none" data-glyph="arrow-right"></span></a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a class="nav-link" href="#" tabindex="-1" aria-disabled="true">Save</a>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
+
+        </nav>
+
+
+    </header>
+
+    <section class="app d-flex bg-light">
+        <div class="tool_bar" style="width: 18px;">
+            <div class="side_bar navbar-dark  align-items-center">
+                <ul class="nav flex-column">
+                    <li class="nav-item ">
+                        <a class="nav-link " href="#">Adjust</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Filters</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Compress</a>
+                    </li>
+                    <li class="nav-item d-none">
+                        <a class="nav-link" href="#">Link</a>
+                    </li>
+
+                </ul>
+                <span class="oi" data-glyph="chevron-right"></span>
+            </div>
+        </div>
+        <div class="adjust_bar d-flex justify-content-center align-items-center" style="overflow: auto;">
+            <div class="container ">
+                <form class="container mx-2 text-light  " id="Adjust">
+                    <div class="form-group ">
+                        <label for="red">Red</label>
+                        <input type="range" class="form-control-range" value="0" min="-255" max="255" id="red"
+                            oninput="Input_update(this)">
+                        <div class="my-2 text-center">
+                            <span>0</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="blue">Blue</label>
+                        <input type="range" class="form-control-range" value="0" min="-255" max="255" id="blue"
+                            oninput="Input_update(this)">
+                        <div class="my-2 text-center">
+                            <span>0</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="green">Green</label>
+                        <input type="range" class="form-control-range" value="0" min="-255" max="255" id="green"
+                            oninput="Input_update(this)">
+                        <div class="my-2 text-center">
+                            <span>0</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="threshold">Thresholding</label>
+                        <input type="range" class="form-control-range" value="0" min="-255" max="255" id="threshold"
+                            oninput="Input_update(this)">
+                        <div class="my-2 text-center">
+                            <span>0</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="brightness">Brightness</label>
+                        <input type="range" class="form-control-range" value="0" min="-255" max="255" id="brightness"
+                            oninput="Input_update(this)">
+                        <div class="my-2 text-center">
+                            <span>0</span>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="container mx-2 text-light" id="Compress">
+
+                    <div class="form-group ">
+                        <label for="Compress">Compression Quality</label>
+                        <input type="range" value="0" min="0" max="100" class="form-control-range" id="Compression"
+                            oninput="Input_update(this)">
+                        <div class="my-2 range_value text-center">
+                            <span>0</span>
+                        </div>
+                        <div class="container d-flex justify-content-center">
+                            <div class="btn btn-primary">Compress Image</div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="container text-light" id="Filters">
+                    <div class="card shadow" style="width: 17rem;">
+                        <img src="./test.jpg" class="card-img-top grayscale" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">Grayscale</h5>
+                            <p class="card-text d-none">Some quick example text to build on the card title and make up
+                                the bulk of the card's
+                                content.</p>
+                            <a href="#" class="btn btn-primary">Apply</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="main_app bg-light">
+                <div class="container" style="position: relative;height: calc(100vh - 72px)">
+                    <div class="origin_canvas">
+                        <!-- <img src="" alt="" width="100%" height="auto" id="origin_img"> -->
+                        <canvas></canvas>
+                    </div>
+                    <div class="pre_canvas">
+                        <canvas> </canvas>
+                    </div>
+                    <div class="after_canvas">
+                        <canvas> </canvas>
+                    </div>
+                </div>
+        </div>
+    </section>
+
+
+
+
+
+    <!-- **** All JS Files ***** -->
+    <!-- jQuery 2.2.4 -->
+    <script src="js/jquery.min.js"></script>
+    <!-- Popper -->
+    <script src="js/popper.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- All Plugins -->
+    <script src="js/alime.bundle.js"></script>
+    <!-- Active -->
+    <script src="js/default-assets/active.js"></script>
+    <!-- Slider -->
+    <!-- <script src="./nouislider.min.js"></script> -->
+    <script src="./ImageProcessing.js"></script>
+    <!-- App -->
+    <script src="./js/app.js"></script>
+</body>

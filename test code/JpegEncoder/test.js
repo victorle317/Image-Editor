@@ -1,43 +1,3 @@
-/*
-
-  Basic GUI blocking jpeg encoder ported to JavaScript and optimized by 
-  Andreas Ritter, www.bytestrom.eu, 11/2009.
-
-  Example usage is given at the bottom of this file.
-
-  ---------
-
-  Copyright (c) 2008, Adobe Systems Incorporated
-  All rights reserved.
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are
-  met:
-
-  * Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
-
-  * Neither the name of Adobe Systems Incorporated nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 function JPEGEncoder(quality) {
     var self = this;
     var fround = Math.round;
@@ -62,8 +22,8 @@ function JPEGEncoder(quality) {
     var YDU = new Array(64);
     var UDU = new Array(64);
     var VDU = new Array(64);
-    var clt = new Array(256);// bảng utf-16
-    // var RGB_YUV_TABLE = new Array(2048);
+    var clt = new Array(256);
+    var RGB_YUV_TABLE = new Array(2048);
     var currentQuality;
 
     var ZigZag = [
@@ -103,7 +63,7 @@ function JPEGEncoder(quality) {
         0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
         0xf9, 0xfa
     ];
- 
+
     var std_dc_chrominance_nrcodes = [0, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0];
     var std_dc_chrominance_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     var std_ac_chrominance_nrcodes = [0, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77];
@@ -199,7 +159,6 @@ function JPEGEncoder(quality) {
             }
             codevalue *= 2;
         }
-        // console.log(HT);
         return HT;
     }
 
@@ -208,7 +167,6 @@ function JPEGEncoder(quality) {
         UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes, std_dc_chrominance_values);
         YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes, std_ac_luminance_values);
         UVAC_HT = computeHuffmanTbl(std_ac_chrominance_nrcodes, std_ac_chrominance_values);
-        console.log(YAC_HT);
     }
 
     function initCategoryNumber() {
@@ -231,24 +189,21 @@ function JPEGEncoder(quality) {
             }
             nrlower <<= 1;
             nrupper <<= 1;
-
         }
-        // console.log(bitcode);
-        // console.log(category);
     }
 
-    // function initRGBYUVTable() {
-    //     for (var i = 0; i < 256; i++) {
-    //         RGB_YUV_TABLE[i] = 19595 * i;
-    //         RGB_YUV_TABLE[(i + 256) >> 0] = 38470 * i;
-    //         RGB_YUV_TABLE[(i + 512) >> 0] = 7471 * i + 0x8000;
-    //         RGB_YUV_TABLE[(i + 768) >> 0] = -11059 * i;
-    //         RGB_YUV_TABLE[(i + 1024) >> 0] = -21709 * i;
-    //         RGB_YUV_TABLE[(i + 1280) >> 0] = 32768 * i + 0x807FFF;
-    //         RGB_YUV_TABLE[(i + 1536) >> 0] = -27439 * i;
-    //         RGB_YUV_TABLE[(i + 1792) >> 0] = - 5329 * i;
-    //     }
-    // }
+    function initRGBYUVTable() {
+        for (var i = 0; i < 256; i++) {
+            RGB_YUV_TABLE[i] = 19595 * i;
+            RGB_YUV_TABLE[(i + 256) >> 0] = 38470 * i;
+            RGB_YUV_TABLE[(i + 512) >> 0] = 7471 * i + 0x8000;
+            RGB_YUV_TABLE[(i + 768) >> 0] = -11059 * i;
+            RGB_YUV_TABLE[(i + 1024) >> 0] = -21709 * i;
+            RGB_YUV_TABLE[(i + 1280) >> 0] = 32768 * i + 0x807FFF;
+            RGB_YUV_TABLE[(i + 1536) >> 0] = -27439 * i;
+            RGB_YUV_TABLE[(i + 1792) >> 0] = - 5329 * i;
+        }
+    }
 
     // IO functions
     function writeBits(bs) {
@@ -279,15 +234,12 @@ function JPEGEncoder(quality) {
     }
 
     function writeWord(value) {
-        // value 32 bit
-        // dịch 8 bit và and với 0xFF
         writeByte((value >> 8) & 0xFF);
         writeByte((value) & 0xFF);
     }
 
     // DCT & quantization core
     function fDCTQuant(data, fdtbl) {
-        // data là các chỉ số Y,U,V chia thành block 8x8
         var d0, d1, d2, d3, d4, d5, d6, d7;
         /* Pass 1: process rows. */
         var dataOff = 0;
@@ -418,15 +370,13 @@ function JPEGEncoder(quality) {
     function writeAPP0() {
         writeWord(0xFFE0); // marker
         writeWord(16); // length
-
         writeByte(0x4A); // J
         writeByte(0x46); // F
         writeByte(0x49); // I
         writeByte(0x46); // F
         writeByte(0); // = "JFIF",'\0'
-
-        writeByte(1); // version hi
-        writeByte(1); // version lo
+        writeByte(1); // versionhi
+        writeByte(1); // versionlo
         writeByte(0); // xyunits
         writeWord(1); // xdensity
         writeWord(1); // ydensity
@@ -456,32 +406,12 @@ function JPEGEncoder(quality) {
         writeWord(0xFFDB); // marker
         writeWord(132);       // length
         writeByte(0);
-        // let a = 0;
-        // let string =""
-        // console.log("YTABLE-----");
         for (var i = 0; i < 64; i++) {
             writeByte(YTable[i]);
-            // if(a == 8){
-            //     console.log(string);
-            //     string = "";
-            //     a= 0;
-            // }
-            // string+= " "+ YTable[i];
-            // a++;
         }
         writeByte(1);
-        // let b = 0;
-        // let string1 =""
-        // console.log("UVTABLE-----");
         for (var j = 0; j < 64; j++) {
             writeByte(UVTable[j]);
-            // if(b == 8){
-            //     console.log(string1);
-            //     string1 = "";
-            //     b= 0;
-            // }
-            // string1+= " "+ YTable[i];
-            // b++;
         }
     }
 
@@ -592,14 +522,12 @@ function JPEGEncoder(quality) {
     function initCharLookupTable() {
         var sfcc = String.fromCharCode;
         for (var i = 0; i < 256; i++) { ///// ACHTUNG // 255
-            // hàm fromCharCode điền vào bảng clt từ 0 đến 255
             clt[i] = sfcc(i);
         }
     }
 
     this.encode = function (image, quality, toRaw) // image data object
     {
-        let onetime = 1;
         var time_start = new Date().getTime();
 
         if (quality) setQuality(quality);
@@ -610,7 +538,6 @@ function JPEGEncoder(quality) {
         bytepos = 7;
 
         // Add JPEG headers
-        //https://www.file-recovery.com/jpg-signature-format.htm
         writeWord(0xFFD8); // SOI
         writeAPP0();
         writeDQT();
@@ -631,51 +558,48 @@ function JPEGEncoder(quality) {
         var imageData = image.data;
         var width = image.width;
         var height = image.height;
+
         var quadWidth = width * 4;
         var tripleWidth = width * 3;
 
         var x, y = 0;
         var r, g, b;
         var start, p, col, row, pos;
-        let max = 1;
-        let curRow = 0;
         while (y < height) {
-            curRow++;
             x = 0;
             while (x < quadWidth) {
                 start = quadWidth * y + x;
                 p = start;
                 col = -1;
                 row = 0;
-                // 1 block 8x8
+
                 for (pos = 0; pos < 64; pos++) {
                     row = pos >> 3;// /8
                     col = (pos & 7) * 4; // %8
                     p = start + (row * quadWidth) + col;
+
                     if (y + row >= height) { // padding bottom
                         p -= (quadWidth * (y + 1 + row - height));
-            
                     }
 
                     if (x + col >= quadWidth) { // padding right
                         p -= ((x + col) - quadWidth + 4)
                     }
 
-                    //  Save r,g,b of a pixel
                     r = imageData[p++];
                     g = imageData[p++];
                     b = imageData[p++];
 
-                     // calculate YUV values dynamically
+                    /* // calculate YUV values dynamically
                     YDU[pos]=((( 0.29900)*r+( 0.58700)*g+( 0.11400)*b))-128; //-0x80
                     UDU[pos]=(((-0.16874)*r+(-0.33126)*g+( 0.50000)*b));
                     VDU[pos]=((( 0.50000)*r+(-0.41869)*g+(-0.08131)*b));
-                    
+                    */
 
                     // use lookup table (slightly faster)
-                    // YDU[pos] = ((RGB_YUV_TABLE[r] + RGB_YUV_TABLE[(g + 256) >> 0] + RGB_YUV_TABLE[(b + 512) >> 0]) >> 16) - 128;
-                    // UDU[pos] = ((RGB_YUV_TABLE[(r + 768) >> 0] + RGB_YUV_TABLE[(g + 1024) >> 0] + RGB_YUV_TABLE[(b + 1280) >> 0]) >> 16) - 128;
-                    // VDU[pos] = ((RGB_YUV_TABLE[(r + 1280) >> 0] + RGB_YUV_TABLE[(g + 1536) >> 0] + RGB_YUV_TABLE[(b + 1792) >> 0]) >> 16) - 128;
+                    YDU[pos] = ((RGB_YUV_TABLE[r] + RGB_YUV_TABLE[(g + 256) >> 0] + RGB_YUV_TABLE[(b + 512) >> 0]) >> 16) - 128;
+                    UDU[pos] = ((RGB_YUV_TABLE[(r + 768) >> 0] + RGB_YUV_TABLE[(g + 1024) >> 0] + RGB_YUV_TABLE[(b + 1280) >> 0]) >> 16) - 128;
+                    VDU[pos] = ((RGB_YUV_TABLE[(r + 1280) >> 0] + RGB_YUV_TABLE[(g + 1536) >> 0] + RGB_YUV_TABLE[(b + 1792) >> 0]) >> 16) - 128;
 
                 }
 
@@ -684,11 +608,8 @@ function JPEGEncoder(quality) {
                 DCV = processDU(VDU, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
                 x += 32;
             }
-            // console.log(p++);
-
             y += 8;
         }
-        // console.log(arr);
 
         ////////////////////////////////////////////////////////////////
 
@@ -705,30 +626,28 @@ function JPEGEncoder(quality) {
         if (toRaw) {
             var len = byteout.length;
             var data = new Uint8Array(len);
-    
+
             for (var i = 0; i < len; i++) {
                 data[i] = byteout[i].charCodeAt();
             }
-    
+
             //cleanup
             byteout = [];
-    
+
             // benchmarking
             var duration = new Date().getTime() - time_start;
             console.log('Encoding time: ' + duration + 'ms');
-            // console.log(data);
+
             return data;
         }
-        // console.log(byteout);
+
         var jpegDataUri = 'data:image/jpeg;base64,' + btoa(byteout.join(''));
-        // console.log('data:image/jpeg;base64,'+btoa(byteout.join('')));
 
         byteout = [];
 
         // benchmarking
         var duration = new Date().getTime() - time_start;
         console.log('Encoding time: ' + duration + 'ms');
-        // console.log("clt: "+ clt);
 
         return jpegDataUri
     }
@@ -762,7 +681,7 @@ function JPEGEncoder(quality) {
         initCharLookupTable()
         initHuffmanTbl();
         initCategoryNumber();
-        // initRGBYUVTable();;
+        initRGBYUVTable();
 
         setQuality(quality);
         var duration = new Date().getTime() - time_start;
@@ -777,65 +696,63 @@ function example(quality) {
     var theImg = document.getElementById('testimage');
     // Use a canvas to extract the raw image data
     var cvs = document.createElement('canvas');
+    setTimeout(()=>{
+        cvs.width = theImg.width;
+        cvs.height = theImg.height;
+        var ctx = cvs.getContext("2d");
+        ctx.drawImage(theImg, 0, 0);
+        var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
+        // Encode the image and get a URI back, toRaw is false by default
+        var jpegURI = encoder.encode(theImgData, quality);
+        var img = document.createElement('img');
+        img.src = jpegURI;
+        document.body.appendChild(img);
+    },100);
+
+}
+
+let encoder = new JPEGEncoder(20)
+example(20)
+
+
+// example(50)
+/* Example usage. Quality is an int in the range [0, 100]
+function example(quality){
+    // Pass in an existing image from the page
+    var theImg = document.getElementById('testimage');
+    // Use a canvas to extract the raw image data
+    var cvs = document.createElement('canvas');
     cvs.width = theImg.width;
     cvs.height = theImg.height;
     var ctx = cvs.getContext("2d");
-    ctx.drawImage(theImg, 0, 0);
+    ctx.drawImage(theImg,0,0);
     var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
     // Encode the image and get a URI back, toRaw is false by default
     var jpegURI = encoder.encode(theImgData, quality);
     var img = document.createElement('img');
     img.src = jpegURI;
-
     document.body.appendChild(img);
 }
-
-let encoder = new JPEGEncoder(1)
-example(25)
-
-
-// example(50)
-// Example usage. Quality is an int in the range [0, 100]
-// function example(quality){
-//     // Pass in an existing image from the page
-//     var theImg = document.getElementById('testimage');
-//     // Use a canvas to extract the raw image data
-//     var cvs = document.createElement('canvas');
-//     cvs.width = theImg.width;
-//     cvs.height = theImg.height;
-//     var ctx = cvs.getContext("2d");
-//     ctx.drawImage(theImg,0,0);
-//     var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
-//     // Encode the image and get a URI back, toRaw is false by default
-//     var jpegURI = encoder.encode(theImgData, quality);
-//     var img = document.createElement('img');
-//     img.src = jpegURI;
-//     document.body.appendChild(img);
-// }
-
-// Example usage for getting back raw data and transforming it to a blob.
-// Raw data is useful when trying to send an image over XHR or Websocket,
-// it uses around 30% less bytes then a Base64 encoded string. It can
-// also be useful if you want to save the image to disk using a FileWriter.
-
-// NOTE: The browser you are using must support Blobs
-// function example(quality){
-//     // Pass in an existing image from the page
-//     var theImg = document.getElementById('testimage');
-//     // Use a canvas to extract the raw image data
-//     var cvs = document.createElement('canvas');
-//     cvs.width = theImg.width;
-//     cvs.height = theImg.height;
-//     var ctx = cvs.getContext("2d");
-//     ctx.drawImage(theImg,0,0);
-//     var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
-//     // Encode the image and get a URI back, set toRaw to true
-//     var rawData = encoder.encode(theImgData, quality, true);
-
-//     blob = new Blob([rawData.buffer], {type: 'image/jpeg'});
-//     var jpegURI = URL.createObjectURL(blob);
-
-//     var img = document.createElement('img');
-//     img.src = jpegURI;
-//     document.body.appendChild(img);
-// }
+Example usage for getting back raw data and transforming it to a blob.
+Raw data is useful when trying to send an image over XHR or Websocket,
+it uses around 30% less bytes then a Base64 encoded string. It can
+also be useful if you want to save the image to disk using a FileWriter.
+NOTE: The browser you are using must support Blobs
+function example(quality){
+    // Pass in an existing image from the page
+    var theImg = document.getElementById('testimage');
+    // Use a canvas to extract the raw image data
+    var cvs = document.createElement('canvas');
+    cvs.width = theImg.width;
+    cvs.height = theImg.height;
+    var ctx = cvs.getContext("2d");
+    ctx.drawImage(theImg,0,0);
+    var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
+    // Encode the image and get a URI back, set toRaw to true
+    var rawData = encoder.encode(theImgData, quality, true);
+    blob = new Blob([rawData.buffer], {type: 'image/jpeg'});
+    var jpegURI = URL.createObjectURL(blob);
+    var img = document.createElement('img');
+    img.src = jpegURI;
+    document.body.appendChild(img);
+}*/
