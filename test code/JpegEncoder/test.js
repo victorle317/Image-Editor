@@ -176,6 +176,11 @@ function JPEGEncoder(quality) {
         // bảng std_table truyền vào là các index của bảng huffman, tức 
         // là về sau dựa vào bảng std_table này để ghi vào vị trí như 1,5,2,3,4 kiểu v, ko 
         // theo thứ tự mà theo thứ tự quy định trong std_table
+
+        // var std_dc_luminance_nrcodes = [0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+
+        // var std_dc_luminance_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
         var codevalue = 0;
         var pos_in_table = 0;
         var HT = new Array();
@@ -206,6 +211,17 @@ function JPEGEncoder(quality) {
         UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes, std_dc_chrominance_values);
         YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes, std_ac_luminance_values);
         UVAC_HT = computeHuffmanTbl(std_ac_chrominance_nrcodes, std_ac_chrominance_values);
+        console.log("0xF0 YAC:" +  YAC_HT[0xF0])
+        console.log("0xF0 uVAC:" +  UVAC_HT[0xF0])
+        console.log("------------------------------------");
+        console.log("YDC_HT");
+        console.log(YDC_HT);
+        console.log("YAC_HT");
+        console.log(YAC_HT);
+        console.log("UVDC_HT");
+        console.log(UVDC_HT);
+        console.log("UVAC_HT");
+        console.log(UVAC_HT);
     }
 
     function initCategoryNumber() {
@@ -249,7 +265,7 @@ function JPEGEncoder(quality) {
             // 1 << 4 = 16 vậy là kiểm tra value
             // từ 16 đến 31
             // cx có thể nói
-            // đây là kiểm tra value trong khoảng từ (bằng 2^posval đến nhỏ hơn 2^posval + posval)
+            // đây là kiểm tra value trong khoảng từ (bằng 2^posval đến nhỏ hơn 2^(posval + 1 ))
             if (value & (1 << posval)) {
                 // posval vốn là độ sâu 
                 // 1 << posval là tính ra tổng số giá trị của posval đó có được
@@ -263,6 +279,7 @@ function JPEGEncoder(quality) {
             // bytepos vốn sau 1 lần ghi set thành 7
             // nên là sau 8 bit thì được ghi byte đó
             // ở đây hiểu cứ 8 bit thì đc ghi 1 byte
+            
             if (bytepos < 0) {
                 if (bytenew == 0xFF) {
                     // chỉ là để tránh nhầm lẫn với các marker
@@ -546,12 +563,11 @@ function JPEGEncoder(quality) {
         var pos;
         const I16 = 16;
         const I63 = 63;
-        const I64 = 64;
         // data từng pixel sau khi FDCT và Quantization
         var DU_DCT = fDCTQuant(CDU, fdtbl);
 
         //ZigZag lại data
-        for (var j = 0; j < I64; ++j) {
+        for (var j = 0; j < 64; ++j) {
             DU[ZigZag[j]] = DU_DCT[j];
         }
         // so sánh 2 dc hiện tại và trước đó
@@ -562,27 +578,40 @@ function JPEGEncoder(quality) {
             writeBits(HTDC[0]); // Diff might be 0
         } else {
             pos = 32767 + Diff;
-        
             writeBits(HTDC[category[pos]]);
             writeBits(bitcode[pos]);
         }
-        //Encode ACs
+        //Encode ACs : dãy AC là 1 dãy số của ma trận sau khi biến đổi DCT
+        // nhưng mà chỉ chứa các phần tử trừ phần tử đầu
+        // nên là end0pos = 63
         var end0pos = 63; // was const... which is crazy
+        //  đếm các phần tử khác 0
         while (end0pos > 0 && (DU[end0pos] ==0)){
+            // ví dụ như: 1 2 5 53 5 2 6 0 0 0 1 0 0 0 0
+            // ở đây có tổng 15 số
+            // ví dụ trên thì mình có end0pos = 15
+            // nên là khi duyệt xong thì end0pos sẽ là
+            // duyệt từ cuối về đầu thì end0pos 11 vì trừ đi 4 con số 0 ở cuối
             end0pos--;
         }
-        // for (; (end0pos > 0) && (DU[end0pos] == 0); end0pos--) { };
-        //end0pos = first element in reverse order !=0
+        // sau đó có end0pos chính là số lượng các số trong AC mà khác 0
         if (end0pos == 0) {
-            writeBits(EOB);
+            // nếu mà dịch đến hết rồi thì ghi dấu kết thúc End Of Block
+            // thường thì dãy AC toàn 0 nên có khi là sẽ vào đây nhiều
+            // toàn là 0 nên chả cần dùng huffman encode đoạn dưới nữa mà 
+            writeBits(EOB); 
             return DC;
         }
         var i = 1;
         var lng;
+        // xét i =1 là từ vị trí thứ 2, tức bỏ qua vị trí đầu vì đó là DC
         while (i <= end0pos) {
-            var startpos = i;
+            // xét duyệt dãy AC từ đầu đến vị trí mà sau đó toàn là số 0
+            // cái này là để chuyển đổi huffman với các con số trong khoảng này
+            var startpos = i; // gán vị trí xét
+            // nếu mà vị trí đó vẫn bằng 0 thì tăng i lên để đếm i 
             for (; (DU[i] == 0) && (i <= end0pos); ++i) { }
-            var nrzeroes = i - startpos;
+            var nrzeroes = i - startpos; 
             // nếu nrzeros lớn hơn 16, dịch lại 16 bit để giảm
             if (nrzeroes >= I16) {
                 lng = nrzeroes >> 4;
@@ -715,7 +744,7 @@ function JPEGEncoder(quality) {
 
             return data;
         }
-
+        console.log(byteout);
         var jpegDataUri = 'data:image/jpeg;base64,' + btoa(byteout.join(''));
 
         byteout = [];
