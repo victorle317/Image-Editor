@@ -16,19 +16,23 @@ class ImageProcessing {
   constructor(imgsrcID, canvasID) {
     this.imgData = null;
     this.filters = {}
-    this.imgSrc = document.querySelector('img')
-    this.canvas = document.getElementById("canvas");
+    // this.imgSrc = document.querySelector('img')
+    this.imgSrc = imgsrcID
+    this.canvas = document.querySelector(canvasID);
+    console.log(canvasID);
+    console.log(this.imgSrc.width, this.imgSrc.height);
+
     this.ctx = this.canvas.getContext('2d');
     // chỉnh size của canvas = size của ảnh gốc
-    this.canvas.width = this.imgSrc.naturalWidth;
-    this.canvas.height = this.imgSrc.naturalHeight;
+    this.canvas.width = this.imgSrc.width;
+    this.canvas.height = this.imgSrc.height;
     this.loadImg()
     this.init()
   }
   loadImg() {
     // hàm này load img vào canvas và return imgData
-    this.ctx.drawImage(this.imgSrc, 0, 0, this.imgSrc.naturalWidth, this.imgSrc.naturalHeight);
-    this.imgData = this.ctx.getImageData(0, 0, this.imgSrc.naturalWidth, this.imgSrc.naturalHeight)
+    this.ctx.drawImage(this.imgSrc, 0, 0, this.imgSrc.width, this.imgSrc.height);
+    this.imgData = this.ctx.getImageData(0, 0, this.imgSrc.width, this.imgSrc.height)
     console.log(this.imgData)
   }
   init() {

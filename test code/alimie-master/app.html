@@ -137,19 +137,19 @@
                         </select>
                         <div class="url mt-2 ">
                             <label for="url">Image's URL</label>
-                            <input class="form-control" type="text" placeholder="Place your image's URL here" id="url">
+                            <input class="form-control" type="text" placeholder="Place your image's URL here" autocomplete="off" id="url">
                         </div>
                         <div class="file mt-2 d-none">
                             <label for="file">Browse image file</label>
                             <input class="form-control d-none" type="text" placeholder="Place your image file here" id="file">
                             <div class="input-group">
                                 <div class="custom-file">
-                                    <input type="file" class="custom-file-input" id="file" aria-describedby="inputGroupFileAddon04">
+                                    <input type="file" class="custom-file-input file" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04">
                                     <label class="custom-file-label" for="file">Choose file</label>
                                 </div>
-                                <div class="input-group-append">
+                                <!-- <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" id="file">Button</button>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                         
@@ -158,7 +158,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-primary" onclick="save_inp_changes()">Save changes</button>
                 </div>
             </div>
         </div>
@@ -218,7 +218,7 @@
     </header>
 
     <section class="app d-flex bg-light">
-        <div class="tool_bar" style="">
+        <div class="tool_bar" >
             <div class="side_bar navbar-dark  align-items-center">
                 <ul class="nav flex-column">
                     <li class="nav-item ">
@@ -238,7 +238,7 @@
                 <span class="oi" data-glyph="chevron-right"></span>
             </div>
         </div>
-        <div class="adjust_bar d-flex justify-content-center align-items-center" style="overflow: auto;">
+        <div class="adjust_bar d-flex justify-content-center align-items-center" style="overflow: auto;z-index: 5;">
             <div class="container ">
                 <form class="container mx-2 text-light  " id="Adjust">
                     <div class="form-group ">
@@ -300,14 +300,14 @@
 
                 </div>
                 <div class="container text-light" id="Filters">
-                    <div class="card shadow" style="width: 17rem;">
+                    <div class="Grayscale card shadow " style="width: 17rem;" >
                         <img src="./test.jpg" class="card-img-top grayscale" alt="...">
                         <div class="card-body">
                             <h5 class="card-title">Grayscale</h5>
                             <p class="card-text d-none">Some quick example text to build on the card title and make up
                                 the bulk of the card's
                                 content.</p>
-                            <a href="#" class="btn btn-primary">Apply</a>
+                            <a href="#" class="btn btn-primary apply">Apply</a>
                         </div>
                     </div>
 
@@ -316,15 +316,16 @@
         </div>
 
         <div class="main_app bg-light">
-                <div class="container d-none" style="position: relative;height: calc(100vh - 72px)">
-                    <div class="origin_canvas">
+                <div class="container" style="position: relative;height: calc(100vh - 72px);z-index: 1;overflow: auto;">
+                    <div class="origin_canvas d-none ">
                         <!-- <img src="" alt="" width="100%" height="auto" id="origin_img"> -->
                         <canvas></canvas>
                     </div>
-                    <div class="pre_canvas">
+                    <div class="pre_canvas d-none">
                         <canvas> </canvas>
                     </div>
-                    <div class="after_canvas">
+                    <div class="after_canvas" style="height: auto;">
+                        <!-- <img src="https://scontent-hkt1-2.xx.fbcdn.net/v/t1.6435-9/196833744_344906770313828_2773103222739835649_n.jpg?_nc_cat=108&ccb=1-3&_nc_sid=730e14&_nc_ohc=SRBuEQ6_LhwAX-nqveB&tn=oKjLmM0vlQcSmXnJ&_nc_ht=scontent-hkt1-2.xx&oh=91c6431e3d61be5a882451ad47e10a64&oe=60D10D10" alt=""> -->
                         <canvas> </canvas>
                     </div>
                 </div>
@@ -348,6 +349,9 @@
     <script src="js/default-assets/active.js"></script>
     <!-- Slider -->
     <!-- <script src="./nouislider.min.js"></script> -->
+    <!-- zoom -->
+    <script src="./js/panzoom.min.js"></script>
+    <!--  -->
     <script src="./ImageProcessing.js"></script>
     <!-- App -->
     <script src="./js/app.js"></script>
