@@ -15,21 +15,31 @@
 class ImageProcessing {
   constructor(imgsrcID, canvasID) {
     this.imgData = null;
+    this.outputData = null;
     this.filters = {}
-    this.imgSrc = document.querySelector('img')
-    this.canvas = document.getElementById("canvas");
+    // this.imgSrc = document.querySelector('img')
+    this.imgSrc = imgsrcID
+    this.canvas = document.querySelector(canvasID);
+    console.log(canvasID);
+    console.log(this.imgSrc.width, this.imgSrc.height);
+
     this.ctx = this.canvas.getContext('2d');
     // chỉnh size của canvas = size của ảnh gốc
-    this.canvas.width = this.imgSrc.naturalWidth;
-    this.canvas.height = this.imgSrc.naturalHeight;
+    this.canvas.width = this.imgSrc.width;
+    this.canvas.height = this.imgSrc.height;
     this.loadImg()
     this.init()
   }
   loadImg() {
     // hàm này load img vào canvas và return imgData
-    this.ctx.drawImage(this.imgSrc, 0, 0, this.imgSrc.naturalWidth, this.imgSrc.naturalHeight);
-    this.imgData = this.ctx.getImageData(0, 0, this.imgSrc.naturalWidth, this.imgSrc.naturalHeight)
-    console.log(this.imgData)
+    this.ctx.drawImage(this.imgSrc, 0, 0, this.imgSrc.width, this.imgSrc.height);
+    this.imgData = this.ctx.getImageData(0, 0, this.imgSrc.width, this.imgSrc.height);
+    this.outputData = this.ctx.getImageData(0, 0, this.imgSrc.width, this.imgSrc.height);
+
+    // this.outputData = Object.assign({},this.imgData);
+   
+    console.log(this.imgData);
+    console.log(this.outputData);
   }
   init() {
     // gắn các hàm vào filters , để ở đây tạo api luôn
@@ -40,13 +50,14 @@ class ImageProcessing {
     this.filters.grayBalance = this.grayBalance
   }
   apply() {
-    this.ctx.putImageData(this.imgData,  0,0);
+    this.ctx.putImageData(this.outputData,  0,0);
   }
 
   // bind this để bảo function, cái this ở trong function là object Imgprocessing chứ ko phải là CHÍNH CÁI FUNCTION đó và cái Object filters như trong kiểu khai báo brightness(){}
   grayScale = function () {
     // console.log(this.imgData);
-    let pixels = this.imgData.data
+    let pixels = this.imgData.data;
+    let output = this.outputData.data;
     for (var i = 0; i < pixels.length; i += 4) {
       var r = pixels[i];
       var g = pixels[i + 1];
@@ -54,30 +65,39 @@ class ImageProcessing {
       // CIE luminance for the RGB
       // The human eye is bad at seeing red and blue, so we de-emphasize them.
       var v = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      pixels[i] = pixels[i + 1] = pixels[i + 2] = v
+      output[i] = output[i + 1] = output[i + 2] = v
     }
     return this
   }.bind(this)
 
   brightness = function (adjustment) {
-    console.log(this)
-    let pixels = this.imgData.data
-    for (var i = 0; i < pixels.length; i += 4) {
-      pixels[i] += adjustment;
-      pixels[i + 1] += adjustment;
-      pixels[i + 2] += adjustment;
+    console.log(adjustment);
+    // console.log(this)
+    let pixels = this.imgData.data;
+    let tmp = [...this.imgData.data];
+    let output = this.outputData.data;
+    for (var i = 0; i < tmp.length; i += 4) {
+      tmp[i] += adjustment;
+      tmp[i + 1] += adjustment;
+      tmp[i + 2] += adjustment;
+      output[i] = tmp[i];
+      output[i + 1] = tmp[i + 1];
+      output[i + 2] = tmp[i + 2];
     }
+    // console.log(pixels);
+    // console.log(output);
     return this;
   }.bind(this);
 
   threshold = function (threshold) {
     let pixels = this.imgData.data
+    let output = this.outputData.data;
     for (var i = 0; i < pixels.length; i += 4) {
       var r = pixels[i];
       var g = pixels[i + 1];
       var b = pixels[i + 2];
       var v = (0.2126 * r + 0.7152 * g + 0.0722 * b >= threshold) ? 255 : 0;
-      pixels[i] = pixels[i + 1] = pixels[i + 2] = v
+      output[i] = output[i + 1] = output[i + 2] = v
     }
     return this;
   }.bind(this);
@@ -90,6 +110,8 @@ class ImageProcessing {
     let ImgCDF = [];
     let newImgData = [];
     let pixels = this.imgData.data;
+    let output = this.outputData.data;
+
     let totalPixels = pixels.length/4;
     // Thống kê số liệu
     for (var i = 0; i < pixels.length; i += 4) {
@@ -145,7 +167,7 @@ class ImageProcessing {
           //   console.log("OLD: " + r)
           //   console.log("NEW: " + newImgData[j].new);
           // }
-          pixels[i] = pixels[i+1] = pixels[i+2] = newImgData[j].new;
+          output[i] = output[i+1] = output[i+2] = newImgData[j].new;
         }
       }
     }

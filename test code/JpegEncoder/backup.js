@@ -1,3 +1,43 @@
+/*
+
+  Basic GUI blocking jpeg encoder ported to JavaScript and optimized by 
+  Andreas Ritter, www.bytestrom.eu, 11/2009.
+
+  Example usage is given at the bottom of this file.
+
+  ---------
+
+  Copyright (c) 2008, Adobe Systems Incorporated
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are
+  met:
+
+  * Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+  * Neither the name of Adobe Systems Incorporated nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 function JPEGEncoder(quality) {
     var self = this;
     var fround = Math.round;
@@ -10,15 +50,6 @@ function JPEGEncoder(quality) {
     var UVDC_HT;
     var YAC_HT;
     var UVAC_HT;
-    
-    var scaleFactors = [1/(2*Math.sqrt(2))];
-    var arrayC = [];
-    var a1;
-    var a2;
-    var a3;
-    var a4;
-    var a5;
-
 
     var bitcode = new Array(65535);
     var category = new Array(65535);
@@ -32,9 +63,9 @@ function JPEGEncoder(quality) {
     var UDU = new Array(64);
     var VDU = new Array(64);
     var clt = new Array(256);
- 
+    var RGB_YUV_TABLE = new Array(2048);
     var currentQuality;
-  
+
     var ZigZag = [
         0, 1, 5, 6, 14, 15, 27, 28,
         2, 4, 7, 13, 16, 26, 29, 42,
@@ -100,25 +131,6 @@ function JPEGEncoder(quality) {
         0xf9, 0xfa
     ];
 
-    function initConstantForFDCT(){
-        // tạo tính trước sẵn các giá trị để dùng trong 
-        // biến đổi cousin rời rạc phiên bản nhanh
-        // bởi arai, agui, và naka...
-        // thuật toán AAN 
-        for (var i = 1; i < 8; i++) {
-            let c = Math.cos(i*Math.PI/16);
-            arrayC.push(c);
-            scaleFactors.push(1/(4*c));
-        }
-        // mảng arrayC tính từ index 0 mà theo cthuc thì lệch -1 index xuống cho đúng
-        a1 = arrayC[3];
-        a2 = arrayC[1] - arrayC[5];
-        a3 = arrayC[3];
-        a4 = arrayC[5] + arrayC[1];
-        a5 = arrayC[5];
-    
-    }
-
     function initQuantTables(sf) {
         var YQT = [
             16, 11, 10, 16, 24, 40, 51, 61,
@@ -130,8 +142,7 @@ function JPEGEncoder(quality) {
             49, 64, 78, 87, 103, 121, 120, 101,
             72, 92, 95, 98, 112, 100, 103, 99
         ];
-        // công thức tính bảng lượng tử theo quality, nếu quality = 50 thì bảng YQT coi như giữ nguyên
-        // sau khi tính với công thức dưới
+
         for (var i = 0; i < 64; i++) {
             var t = ffloor((YQT[i] * sf + 50) / 100);
             if (t < 1) {
@@ -160,68 +171,42 @@ function JPEGEncoder(quality) {
             }
             UVTable[ZigZag[j]] = u;
         }
+        var aasf = [
+            1.0, 1.387039845, 1.306562965, 1.175875602,
+            1.0, 0.785694958, 0.541196100, 0.275899379
+        ];
         var k = 0;
         for (var row = 0; row < 8; row++) {
             for (var col = 0; col < 8; col++) {
-                fdtbl_Y[k] = YTable[ZigZag[k]];
-                fdtbl_UV[k] = UVTable[ZigZag[k]];
+                fdtbl_Y[k] = (1.0 / (YTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
+                fdtbl_UV[k] = (1.0 / (UVTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0));
                 k++;
             }
         }
     }
 
     function computeHuffmanTbl(nrcodes, std_table) {
-        // nrcodes: mảng chứa các giá trị mà tổng các giá trị đó sẽ là lần tính 
-        // std_table : chiều dài mảng này sẽ bằng tổng giá trị trên
-        // bảng std_table truyền vào là các index của bảng huffman, tức 
-        // là về sau dựa vào bảng std_table này để ghi vào vị trí như 1,5,2,3,4 kiểu v, ko 
-        // theo thứ tự mà theo thứ tự quy định trong std_table
-
-        // var std_dc_luminance_nrcodes = [0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
-
-        // var std_dc_luminance_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
         var codevalue = 0;
         var pos_in_table = 0;
         var HT = new Array();
         for (var k = 1; k <= 16; k++) {
             for (var j = 1; j <= nrcodes[k]; j++) {
                 HT[std_table[pos_in_table]] = [];
-                HT[std_table[pos_in_table]][0] = codevalue; // giá trị, ví dụ: 0101
-                HT[std_table[pos_in_table]][1] = k; // ví dụ : 5 tức là chứa đc 2^5 kí tự
-                // tăng vị trí trong bảng thôi, vì bảng std_table phản ánh 
-                // vị trí trong bảng huffman, 1 vị trí ko thể có 2 giá trị
+                HT[std_table[pos_in_table]][0] = codevalue;
+                HT[std_table[pos_in_table]][1] = k;
                 pos_in_table++;
                 codevalue++;
             }
             codevalue *= 2;
-            // sau mỗi lần bit tăng lên, thì giá trị cx nên dịch thêm 1 mũ tức x2
-            // vì chẳng hạn 01 mà vào chỗ tính 8 bit thì rất dễ hỏng
         }
         return HT;
     }
 
     function initHuffmanTbl() {
-        // truyền các tiêu chuẩn bảng huffman có được
-        // vì có sẵn là do lấy thông tin từ sách
-        // các bảng này đã được hình thành là nhờ tập dữ liệu vô cùng
-        // lớn của nhiều nơi
-        // NCL: bảng có sẵn
         YDC_HT = computeHuffmanTbl(std_dc_luminance_nrcodes, std_dc_luminance_values);
         UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes, std_dc_chrominance_values);
         YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes, std_ac_luminance_values);
         UVAC_HT = computeHuffmanTbl(std_ac_chrominance_nrcodes, std_ac_chrominance_values);
-        console.log("0xF0 YAC:" +  YAC_HT[0xF0])
-        console.log("0xF0 uVAC:" +  UVAC_HT[0xF0])
-        console.log("------------------------------------");
-        console.log("YDC_HT");
-        console.log(YDC_HT);
-        console.log("YAC_HT");
-        console.log(YAC_HT);
-        console.log("UVDC_HT");
-        console.log(UVDC_HT);
-        console.log("UVAC_HT");
-        console.log(UVAC_HT);
     }
 
     function initCategoryNumber() {
@@ -229,7 +214,6 @@ function JPEGEncoder(quality) {
         var nrupper = 2;
         for (var cat = 1; cat <= 15; cat++) {
             //Positive numbers
-            // tạo nửa trước nửa lớn hơn
             for (var nr = nrlower; nr < nrupper; nr++) {
                 category[32767 + nr] = cat;
                 bitcode[32767 + nr] = [];
@@ -237,9 +221,7 @@ function JPEGEncoder(quality) {
                 bitcode[32767 + nr][0] = nr;
             }
             //Negative numbers
-            // tạo nửa sau nửa bé hơn
             for (var nrneg = -(nrupper - 1); nrneg <= -nrlower; nrneg++) {
-                // vòng for với nrneg âm
                 category[32767 + nrneg] = cat;
                 bitcode[32767 + nrneg] = [];
                 bitcode[32767 + nrneg][1] = cat;
@@ -250,47 +232,35 @@ function JPEGEncoder(quality) {
         }
     }
 
-
+    function initRGBYUVTable() {
+        for (var i = 0; i < 256; i++) {
+            RGB_YUV_TABLE[i] = 19595 * i;
+            RGB_YUV_TABLE[(i + 256) >> 0] = 38470 * i;
+            RGB_YUV_TABLE[(i + 512) >> 0] = 7471 * i + 0x8000;
+            RGB_YUV_TABLE[(i + 768) >> 0] = -11059 * i;
+            RGB_YUV_TABLE[(i + 1024) >> 0] = -21709 * i;
+            RGB_YUV_TABLE[(i + 1280) >> 0] = 32768 * i + 0x807FFF;
+            RGB_YUV_TABLE[(i + 1536) >> 0] = -27439 * i;
+            RGB_YUV_TABLE[(i + 1792) >> 0] = - 5329 * i;
+        }
+    }
 
     // IO functions
     function writeBits(bs) {
-        // nhận vào mảng 2 phần tử
-        var value = bs[0]; // phần tử đầu là giá trị: ví dụ 15
-        var posval = bs[1] - 1;  // phần tử thứ 2 là độ sâu: ví dụ 4
-        // => từ 2 cmt trên ta có thể thấy 2^4 chứa 16 giá trị, 15 là 1 trong các giá trị đó
-        // => còn nhiều giá trị khác từ 0 đến 15 với độ sâu 4
+        var value = bs[0];
+        var posval = bs[1] - 1;
         while (posval >= 0) {
-            // kiểm tra value thuộc khoảng 1 << posval đến (1 << posval + 1) -1
-            // ví dụ posval đang là 4 tức là
-            // 1 << 4 = 16 vậy là kiểm tra value
-            // từ 16 đến 31
-            // cx có thể nói
-            // đây là kiểm tra value trong khoảng từ (bằng 2^posval đến nhỏ hơn 2^(posval + 1 ))
             if (value & (1 << posval)) {
-                // posval vốn là độ sâu 
-                // 1 << posval là tính ra tổng số giá trị của posval đó có được
-                // ví dụ : 1 << 4 => 2^4 = 16 giá trị
                 bytenew |= (1 << bytepos);
-
             }
             posval--;
             bytepos--;
-            // chỉ ghi writeByte khi bytepos <0
-            // bytepos vốn sau 1 lần ghi set thành 7
-            // nên là sau 8 bit thì được ghi byte đó
-            // ở đây hiểu cứ 8 bit thì đc ghi 1 byte
-            
             if (bytepos < 0) {
                 if (bytenew == 0xFF) {
-                    // chỉ là để tránh nhầm lẫn với các marker
-                    // vốn có dạng 0xFF và gì đó như CA :0xFFCA chẳng hạn
-                    // thì sau khi ghi byte đó phải padding thêm 00 để 
-                    // tránh nhầm lẫn, thế thôi
                     writeByte(0xFF);
                     writeByte(0);
                 }
                 else {
-                    // khác thì cứ ghi đi ko ai cấm
                     writeByte(bytenew);
                 }
                 bytepos = 7;
@@ -300,31 +270,23 @@ function JPEGEncoder(quality) {
     }
 
     function writeByte(value) {
-        // value nhận vào giá trị từ 0 đến 255
-        // clt chứa bảng mã ascii hay utf16 theo thứ tự từ 0 đến 255
-        byteout.push(clt[value]);
+        byteout.push(clt[value]); // write char directly instead of converting later
     }
 
     function writeWord(value) {
-        // chỉ lưu 2^8 1 lần
-        // mà truyền vào là 16 bit
-        // nên dịch 8 bit 
-        // lưu 8 bit trước
         writeByte((value >> 8) & 0xFF);
-        // lưu 8 bit sau
         writeByte((value) & 0xFF);
     }
 
-
+    // DCT & quantization core
     function fDCTQuant(data, fdtbl) {
-        // có gì không hiểu xem
-        // biến đổi dct nhanh
-        // https://web.stanford.edu/class/ee398a/handouts/lectures/07-TransformCoding.pdf#page=30
         var d0, d1, d2, d3, d4, d5, d6, d7;
-        // xử lí theo hàng
+        /* Pass 1: process rows. */
         var dataOff = 0;
         var i;
-        for (i = 0; i < 8; ++i) {
+        const I8 = 8;
+        const I64 = 64;
+        for (i = 0; i < I8; ++i) {
             d0 = data[dataOff];
             d1 = data[dataOff + 1];
             d2 = data[dataOff + 2];
@@ -334,67 +296,61 @@ function JPEGEncoder(quality) {
             d6 = data[dataOff + 6];
             d7 = data[dataOff + 7];
 
-            // step 1: 
             var tmp0 = d0 + d7;
+            var tmp7 = d0 - d7;
             var tmp1 = d1 + d6;
+            var tmp6 = d1 - d6;
             var tmp2 = d2 + d5;
+            var tmp5 = d2 - d5;
             var tmp3 = d3 + d4;
             var tmp4 = d3 - d4;
-            var tmp5 = d2 - d5;
-            var tmp6 = d1 - d6;
-            var tmp7 = d0 - d7;
 
-            //step 2
-            var tmp10 = tmp0 + tmp3;    
+            /* Even part */
+            var tmp10 = tmp0 + tmp3;    /* phase 2 */
             var tmp13 = tmp0 - tmp3;
             var tmp11 = tmp1 + tmp2;
             var tmp12 = tmp1 - tmp2;
 
-            // step 3
-            data[dataOff] = tmp10 + tmp11; 
+            data[dataOff] = tmp10 + tmp11; /* phase 3 */
             data[dataOff + 4] = tmp10 - tmp11;
 
-            var z1 = (tmp12 + tmp13) * a1;
-            //step 5
-            data[dataOff + 2] = tmp13 + z1; 
+            var z1 = (tmp12 + tmp13) * 0.707106781; /* c4 */
+            data[dataOff + 2] = tmp13 + z1; /* phase 5 */
             data[dataOff + 6] = tmp13 - z1;
 
-           //step 2
-            tmp10 = tmp4 + tmp5; 
+            /* Odd part */
+            tmp10 = tmp4 + tmp5; /* phase 2 */
             tmp11 = tmp5 + tmp6;
             tmp12 = tmp6 + tmp7;
 
-            var z5 = (tmp10 - tmp12) * a5;
-            var z2 = a2 * tmp10 + z5;
-            var z4 = a4 * tmp12 + z5; 
-            var z3 = tmp11 * a3; 
+            /* The rotator is modified from fig 4-8 to avoid extra negations. */
+            var z5 = (tmp10 - tmp12) * 0.382683433; /* c6 */
+            var z2 = 0.541196100 * tmp10 + z5; /* c2-c6 */
+            var z4 = 1.306562965 * tmp12 + z5; /* c2+c6 */
+            var z3 = tmp11 * 0.707106781; /* c4 */
 
-            // step 5
-            var z11 = tmp7 + z3;   
+            var z11 = tmp7 + z3;    /* phase 5 */
             var z13 = tmp7 - z3;
 
-
-            // step6
-            data[dataOff + 5] = z13 + z2;    
+            data[dataOff + 5] = z13 + z2;    /* phase 6 */
             data[dataOff + 3] = z13 - z2;
             data[dataOff + 1] = z11 + z4;
             data[dataOff + 7] = z11 - z4;
 
-            // dịch tiếp hàng tiếp
-            dataOff += 8; 
+            dataOff += 8; /* advance pointer to next row */
         }
 
-        // xử lí theo cột
+        /* Pass 2: process columns. */
         dataOff = 0;
-        for (i = 0; i < 8; ++i) {
+        for (i = 0; i < I8; ++i) {
             d0 = data[dataOff];
             d1 = data[dataOff + 8];
-            d2 = data[dataOff + 8*2];
-            d3 = data[dataOff + 8*3];
-            d4 = data[dataOff + 8*4];
-            d5 = data[dataOff + 8*5];
-            d6 = data[dataOff + 8*6];
-            d7 = data[dataOff + 8*7];
+            d2 = data[dataOff + 16];
+            d3 = data[dataOff + 24];
+            d4 = data[dataOff + 32];
+            d5 = data[dataOff + 40];
+            d6 = data[dataOff + 48];
+            d7 = data[dataOff + 56];
 
             var tmp0p2 = d0 + d7;
             var tmp7p2 = d0 - d7;
@@ -405,55 +361,49 @@ function JPEGEncoder(quality) {
             var tmp3p2 = d3 + d4;
             var tmp4p2 = d3 - d4;
 
-            // step 2
-            var tmp10p2 = tmp0p2 + tmp3p2;    
+            /* Even part */
+            var tmp10p2 = tmp0p2 + tmp3p2;    /* phase 2 */
             var tmp13p2 = tmp0p2 - tmp3p2;
             var tmp11p2 = tmp1p2 + tmp2p2;
             var tmp12p2 = tmp1p2 - tmp2p2;
 
-            // step 3
-            data[dataOff] = tmp10p2 + tmp11p2; 
-            data[dataOff + 8*4] = tmp10p2 - tmp11p2;
+            data[dataOff] = tmp10p2 + tmp11p2; /* phase 3 */
+            data[dataOff + 32] = tmp10p2 - tmp11p2;
 
-            var z1p2 = (tmp12p2 + tmp13p2) * a1; 
-            // step 5
-            data[dataOff + 8*2] = tmp13p2 + z1p2; 
-            data[dataOff + 8*6] = tmp13p2 - z1p2;
+            var z1p2 = (tmp12p2 + tmp13p2) * 0.707106781; /* c4 */
+            data[dataOff + 16] = tmp13p2 + z1p2; /* phase 5 */
+            data[dataOff + 48] = tmp13p2 - z1p2;
 
-            // step 2
-            tmp10p2 = tmp4p2 + tmp5p2; 
+            /* Odd part */
+            tmp10p2 = tmp4p2 + tmp5p2; /* phase 2 */
             tmp11p2 = tmp5p2 + tmp6p2;
             tmp12p2 = tmp6p2 + tmp7p2;
 
-    
-            var z5p2 = (tmp10p2 - tmp12p2) * a5; 
-            var z2p2 = a2 * tmp10p2 + z5p2; 
-            var z4p2 = a4 * tmp12p2 + z5p2; 
-            var z3p2 = tmp11p2 * a3; 
-            // step 5
-            var z11p2 = tmp7p2 + z3p2;
+            /* The rotator is modified from fig 4-8 to avoid extra negations. */
+            var z5p2 = (tmp10p2 - tmp12p2) * 0.382683433; /* c6 */
+            var z2p2 = 0.541196100 * tmp10p2 + z5p2; /* c2-c6 */
+            var z4p2 = 1.306562965 * tmp12p2 + z5p2; /* c2+c6 */
+            var z3p2 = tmp11p2 * 0.707106781; /* c4 */
+            var z11p2 = tmp7p2 + z3p2;    /* phase 5 */
             var z13p2 = tmp7p2 - z3p2;
 
-            // step 6
-            data[dataOff + 8*5] = z13p2 + z2p2; 
-            data[dataOff + 8*3] = z13p2 - z2p2;
-            data[dataOff + 8*1] = z11p2 + z4p2;
-            data[dataOff + 8*7] = z11p2 - z4p2;
+            data[dataOff + 40] = z13p2 + z2p2; /* phase 6 */
+            data[dataOff + 24] = z13p2 - z2p2;
+            data[dataOff + 8] = z11p2 + z4p2;
+            data[dataOff + 56] = z11p2 - z4p2;
 
-            // cột tiếp theo
-            dataOff++; 
+            dataOff++; /* advance pointer to next column */
         }
+
+        // Quantize/descale the coefficients
         var fDCTQuant;
-        var k = 0;
-        for (var row = 0; row < 8; row++) {
-            for (var col = 0; col < 8; col++) {
-                // scale factor 
-                fDCTQuant = (data[k]/fdtbl[k]) * scaleFactors[col] * scaleFactors[row];
-                outputfDCTQuant[k] = fround(fDCTQuant);
-                k++;
-            }
-        }
+        for (i = 0; i < I64; ++i) {
+            // Apply the quantization and scaling factor & Round to nearest integer
+            fDCTQuant = data[i] * fdtbl[i];
+            outputfDCTQuant[i] = (fDCTQuant > 0.0) ? ((fDCTQuant + 0.5) | 0) : ((fDCTQuant - 0.5) | 0);
+            //outputfDCTQuant[i] = fround(fDCTQuant);
 
+        }
         return outputfDCTQuant;
     }
 
@@ -563,15 +513,12 @@ function JPEGEncoder(quality) {
         var pos;
         const I16 = 16;
         const I63 = 63;
-        // data từng pixel sau khi FDCT và Quantization
+        const I64 = 64;
         var DU_DCT = fDCTQuant(CDU, fdtbl);
-
-        //ZigZag lại data
-        for (var j = 0; j < 64; ++j) {
+        //ZigZag reorder
+        for (var j = 0; j < I64; ++j) {
             DU[ZigZag[j]] = DU_DCT[j];
         }
-        // so sánh 2 dc hiện tại và trước đó
-        // DU[0] là dc của hiện tại, DC là dc block trước
         var Diff = DU[0] - DC; DC = DU[0];
         //Encode DC
         if (Diff == 0) {
@@ -581,38 +528,20 @@ function JPEGEncoder(quality) {
             writeBits(HTDC[category[pos]]);
             writeBits(bitcode[pos]);
         }
-        //Encode ACs : dãy AC là 1 dãy số của ma trận sau khi biến đổi DCT
-        // nhưng mà chỉ chứa các phần tử trừ phần tử đầu
-        // nên là end0pos = 63
+        //Encode ACs
         var end0pos = 63; // was const... which is crazy
-        //  đếm các phần tử khác 0
-        while (end0pos > 0 && (DU[end0pos] ==0)){
-            // ví dụ như: 1 2 5 53 5 2 6 0 0 0 1 0 0 0 0
-            // ở đây có tổng 15 số
-            // ví dụ trên thì mình có end0pos = 15
-            // nên là khi duyệt xong thì end0pos sẽ là
-            // duyệt từ cuối về đầu thì end0pos 11 vì trừ đi 4 con số 0 ở cuối
-            end0pos--;
-        }
-        // sau đó có end0pos chính là số lượng các số trong AC mà khác 0
+        for (; (end0pos > 0) && (DU[end0pos] == 0); end0pos--) { };
+        //end0pos = first element in reverse order !=0
         if (end0pos == 0) {
-            // nếu mà dịch đến hết rồi thì ghi dấu kết thúc End Of Block
-            // thường thì dãy AC toàn 0 nên có khi là sẽ vào đây nhiều
-            // toàn là 0 nên chả cần dùng huffman encode đoạn dưới nữa mà 
-            writeBits(EOB); 
+            writeBits(EOB);
             return DC;
         }
         var i = 1;
         var lng;
-        // xét i =1 là từ vị trí thứ 2, tức bỏ qua vị trí đầu vì đó là DC
         while (i <= end0pos) {
-            // xét duyệt dãy AC từ đầu đến vị trí mà sau đó toàn là số 0
-            // cái này là để chuyển đổi huffman với các con số trong khoảng này
-            var startpos = i; // gán vị trí xét
-            // nếu mà vị trí đó vẫn bằng 0 thì tăng i lên để đếm i 
+            var startpos = i;
             for (; (DU[i] == 0) && (i <= end0pos); ++i) { }
-            var nrzeroes = i - startpos; 
-            // nếu nrzeros lớn hơn 16, dịch lại 16 bit để giảm
+            var nrzeroes = i - startpos;
             if (nrzeroes >= I16) {
                 lng = nrzeroes >> 4;
                 for (var nrmarker = 1; nrmarker <= lng; ++nrmarker)
@@ -701,10 +630,17 @@ function JPEGEncoder(quality) {
                     g = imageData[p++];
                     b = imageData[p++];
 
-                    // calculate YUV values dynamically
+                    /* // calculate YUV values dynamically
                     YDU[pos]=((( 0.29900)*r+( 0.58700)*g+( 0.11400)*b))-128; //-0x80
                     UDU[pos]=(((-0.16874)*r+(-0.33126)*g+( 0.50000)*b));
                     VDU[pos]=((( 0.50000)*r+(-0.41869)*g+(-0.08131)*b));
+                    */
+
+                    // use lookup table (slightly faster)
+                    YDU[pos] = ((RGB_YUV_TABLE[r] + RGB_YUV_TABLE[(g + 256) >> 0] + RGB_YUV_TABLE[(b + 512) >> 0]) >> 16) - 128;
+                    UDU[pos] = ((RGB_YUV_TABLE[(r + 768) >> 0] + RGB_YUV_TABLE[(g + 1024) >> 0] + RGB_YUV_TABLE[(b + 1280) >> 0]) >> 16) - 128;
+                    VDU[pos] = ((RGB_YUV_TABLE[(r + 1280) >> 0] + RGB_YUV_TABLE[(g + 1536) >> 0] + RGB_YUV_TABLE[(b + 1792) >> 0]) >> 16) - 128;
+
                 }
 
                 DCY = processDU(YDU, fdtbl_Y, DCY, YDC_HT, YAC_HT);
@@ -744,14 +680,14 @@ function JPEGEncoder(quality) {
 
             return data;
         }
-        console.log(byteout);
+
         var jpegDataUri = 'data:image/jpeg;base64,' + btoa(byteout.join(''));
 
         byteout = [];
 
         // benchmarking
         var duration = new Date().getTime() - time_start;
-        console.log('Thời gian nén: ' + duration + 'ms');
+        console.log('Encoding time: ' + duration + 'ms');
 
         return jpegDataUri
     }
@@ -775,20 +711,21 @@ function JPEGEncoder(quality) {
 
         initQuantTables(sf);
         currentQuality = quality;
-        console.log('Chất lượng ảnh: ' + quality + '%');
+        console.log('Quality set to: ' + quality + '%');
     }
 
     function init() {
         var time_start = new Date().getTime();
         if (!quality) quality = 50;
         // Create tables
-        initConstantForFDCT()
         initCharLookupTable()
         initHuffmanTbl();
         initCategoryNumber();
-        // setQuality(quality);
+        initRGBYUVTable();
+
+        setQuality(quality);
         var duration = new Date().getTime() - time_start;
-        console.log('Khởi tạo mất: ' + duration + 'ms');
+        console.log('Initialization ' + duration + 'ms');
     }
 
     init();
@@ -799,23 +736,20 @@ function example(quality) {
     var theImg = document.getElementById('testimage');
     // Use a canvas to extract the raw image data
     var cvs = document.createElement('canvas');
-    setTimeout(()=>{
-        cvs.width = theImg.width;
-        cvs.height = theImg.height;
-        var ctx = cvs.getContext("2d");
-        ctx.drawImage(theImg, 0, 0);
-        var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
-        // Encode the image and get a URI back, toRaw is false by default
-        var jpegURI = encoder.encode(theImgData, quality);
-        var img = document.createElement('img');
-        img.src = jpegURI;
-        document.body.appendChild(img);
-    },1000);
-
+    cvs.width = theImg.width;
+    cvs.height = theImg.height;
+    var ctx = cvs.getContext("2d");
+    ctx.drawImage(theImg, 0, 0);
+    var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
+    // Encode the image and get a URI back, toRaw is false by default
+    var jpegURI = encoder.encode(theImgData, quality);
+    var img = document.createElement('img');
+    img.src = jpegURI;
+    document.body.appendChild(img);
 }
 
-let encoder = new JPEGEncoder()
-example(10)
+let encoder = new JPEGEncoder(20)
+example(20)
 
 
 // example(50)
@@ -836,10 +770,12 @@ function example(quality){
     img.src = jpegURI;
     document.body.appendChild(img);
 }
+
 Example usage for getting back raw data and transforming it to a blob.
 Raw data is useful when trying to send an image over XHR or Websocket,
 it uses around 30% less bytes then a Base64 encoded string. It can
 also be useful if you want to save the image to disk using a FileWriter.
+
 NOTE: The browser you are using must support Blobs
 function example(quality){
     // Pass in an existing image from the page
@@ -853,8 +789,10 @@ function example(quality){
     var theImgData = (ctx.getImageData(0, 0, cvs.width, cvs.height));
     // Encode the image and get a URI back, set toRaw to true
     var rawData = encoder.encode(theImgData, quality, true);
+
     blob = new Blob([rawData.buffer], {type: 'image/jpeg'});
     var jpegURI = URL.createObjectURL(blob);
+
     var img = document.createElement('img');
     img.src = jpegURI;
     document.body.appendChild(img);

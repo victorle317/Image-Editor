@@ -71,7 +71,7 @@ class ImageProcessing {
       pixels[i + 2] += adjustment;
     }
     return this;
-  }.bind(this);000000
+  }.bind(this);
 
   threshold = function (threshold) {
     let pixels = this.imgData.data
@@ -260,7 +260,11 @@ setTimeout(()=>{
 }, 1000);
 
 // x.filters.brightness(250).apply();
-// x.filters.grayScale().apply();
+// x.filters.grayBalance().apply();
+x.filters.grayScale().apply();
+x.filters.grayScale().apply();
+x.filters.grayScale().apply();
+x.filters.grayScale().apply();
 
 // console.log(x.imgData.data);
 
