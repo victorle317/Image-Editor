@@ -74,6 +74,9 @@ class ImageProcessing {
         for (let i = 0; i < tmp.length; i += 4) {
             tmp[i] += adjustment;
             output[i] = tmp[i];
+            output[i+1] = tmp[i+1];
+            output[i+2] = tmp[i+2];
+            // output[i] = tmp[i];
         }
         // console.log(pixels);
         // console.log(output);
@@ -86,7 +89,9 @@ class ImageProcessing {
         let output = this.outputData.data;
         for (let i = 0; i < tmp.length; i += 4) {
             tmp[i+1] += adjustment;
+            output[i] = tmp[i];
             output[i + 1] = tmp[i + 1];
+            output[i + 2] = tmp[i + 2];
         }
         // console.log(pixels);
         // console.log(output);
@@ -99,6 +104,8 @@ class ImageProcessing {
         let output = this.outputData.data;
         for (let i = 0; i < tmp.length; i += 4) {
             tmp[i + 2] += adjustment;
+            output[i] = tmp[i];
+            output[i + 1] = tmp[i + 1];
             output[i + 2] = tmp[i + 2];
         }
         // console.log(pixels);

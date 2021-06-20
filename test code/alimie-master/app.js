@@ -84,7 +84,8 @@ apply_button.forEach((e)=>{
         apply_button.forEach((ele)=>{
             ele.classList.remove('active');
         })
-        e.target.classList.toggle('active');
+        e.classList.add('active');
+        console.log(e);
     })
 })
 
@@ -175,6 +176,7 @@ function init(){
     before_red = Number(red.value)
     before_blue = Number(blue.value)
     before_green = Number(green.value)
+    before_threshold = Number(threshold.value)
 
 }
 var before_canvas = document.querySelector(".pre_canvas");
@@ -197,13 +199,14 @@ var before_red = 0;
 var before_green = 0;
 var before_blue = 0;
 var before_brightness = 0;
+var before_threshold =0
 // mỗi khi input thay đổi gì thì chạy hàm này 
 function runPipeline (){
     //gắn lại sự kiện onlick toggle ở trên phần giao diện do ở dưới bị ghi đè bởi pipeline
-    console.log(this.tagName);
-    if(this.tagName == 'A'){
-        this.classList.toggle('active')
-    }
+    // console.log(this.tagName);
+    // if(this.tagName == 'A'){
+    //     this.classList.toggle('active')
+    // }
 
 
     let brightnessFilter = Number(brightness.value)
@@ -211,6 +214,7 @@ function runPipeline (){
     let redFilter = Number(red.value)
     let greenFilter = Number(green.value)
     let blueFilter = Number(blue.value)
+    let thresholdFilter = Number(threshold.value)
     let qlty = Number(quality.value)
 
     if(compress.classList.contains("active")){
@@ -235,6 +239,10 @@ function runPipeline (){
         }
         else if(brightnessFilter != before_brightness){
             ImgProc.brightness(brightnessFilter).apply()
+            before_brightness = brightnessFilter
+        } else if (thresholdFilter != before_threshold ){
+            ImgProc.threshold(thresholdFilter).apply()
+            before_threshold = thresholdFilter
         }
         console.log("KO 1 cái nào");
     }
@@ -244,7 +252,9 @@ function runPipeline (){
     after.classList.add("active");
     before_canvas.classList.add("d-none");
     after_canvas.classList.remove("d-none");
-    
+    apply_button.forEach((ele) => {
+        ele.classList.remove('active');
+    })
 
 }
 // runPipeline()
