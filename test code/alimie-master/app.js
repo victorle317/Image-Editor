@@ -116,13 +116,33 @@ const threshold = document.getElementById('threshold')
 const quality = document.getElementById('Compression')
 
 var grayscale = document.querySelector('.Grayscale .apply')
+var graybalance = document.querySelector(".Graybalance .apply");
 var compress = document.querySelector(".Compress .apply");
 
 var before = document.querySelector(".Before .apply-bf-at");
 var after = document.querySelector(".After .apply-bf-at");
+var save = document.querySelector(".Save .save-btn");
+var saveJPEG = document.querySelector(".Save .save-btn-jpeg");
+var uri = null;
+saveJPEG.addEventListener('click', ()=>{
+    if(uri){
+        let link = document.createElement('a');
+        link.download = 'download';
+        link.href = uri;
+        link.click();
+        link.delete;
+    }
+})
+save.addEventListener('click', ()=>{
+    let canvas = document.querySelector(".after_canvas > canvas");
+    let link = document.createElement('a');
+    link.download = 'download';
+    link.href = canvas.toDataURL();
+    link.click();
+    link.delete;
 
-console.log(before);
-console.log(after);
+})
+
 
 
 img.setAttribute('crossOrigin', 'anonymous');
@@ -167,6 +187,7 @@ function init(){
     brightness.onchange = runPipeline
     threshold.onchange = runPipeline
     grayscale.onclick = runPipeline.bind(grayscale);
+    graybalance.onclick = runPipeline.bind(graybalance);
     compress.onclick = runPipeline.bind(compress);
     before.onclick = showCanvas.bind(before);
     after.onclick = showCanvas.bind(after);
@@ -219,7 +240,11 @@ function runPipeline (){
 
     if(compress.classList.contains("active")){
         console.log("encoder");
-        let jpegURI = ImgProc.encoder.encode(qlty);         
+        uri = ImgProc.encoder.encode(qlty);         
+    }
+    else if(graybalance.classList.contains("active")){
+        console.log('xử lý gray balance');
+        ImgProc.grayBalance().apply()
     }
     else if(grayscale.classList.contains('active')){
         console.log('xử lý grayscale');
