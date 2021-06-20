@@ -78,12 +78,28 @@ $('.side_bar').addClass('side_bar_toggle')
 //gắn event listener cho từng nút apply thêm class active mỗi khi bấm
 var apply_button = document.querySelectorAll('.apply')
 console.log(apply_button);
-for(let i = 0;i<apply_button.length;i++){
-    console.log(1);
-    apply_button[i].onclick = function(e){
-        e.target.classList.toggle('active')
-    }
-}
+apply_button.forEach((e)=>{
+    console.log(apply_button);
+    e.addEventListener("click", function(){
+        apply_button.forEach((ele)=>{
+            ele.classList.remove('active');
+        })
+        e.target.classList.toggle('active');
+    })
+})
+
+
+var before_after = document.querySelectorAll('.apply-bf-at')
+console.log(before_after);
+before_after.forEach((e)=>{
+    e.addEventListener("click", function(){
+        before_after.forEach((ele)=>{
+            ele.classList.remove('active');
+        })
+        e.classList.add('active');
+        console.log(before_after);
+    })
+})
 //-------------------------  Các hàm xử lý ở dưới đây, trên chỉ là giao diện---------------------------------
 
 var fileinput = document.querySelector('#inputGroupFile04')
@@ -96,8 +112,16 @@ const green = document.getElementById('green')
 const blue = document.getElementById('blue')
 const brightness = document.getElementById('brightness')
 const threshold = document.getElementById('threshold')
+const quality = document.getElementById('Compression')
+
 var grayscale = document.querySelector('.Grayscale .apply')
-console.log(grayscale);
+var compress = document.querySelector(".Compress .apply");
+
+var before = document.querySelector(".Before .apply-bf-at");
+var after = document.querySelector(".After .apply-bf-at");
+
+console.log(before);
+console.log(after);
 
 
 img.setAttribute('crossOrigin', 'anonymous');
@@ -122,26 +146,49 @@ function save_inp_changes (){
         img.src = document.querySelector('#url').value
         
     }
+    // set canvas before active// todo
+    before.classList.add("active");
+    after.classList.remove("active");
+    before_canvas.classList.remove("d-none");
+    after_canvas.classList.add("d-none");
 }
 // khi nào img load xong thì chạy init, fix được lỗi width = 0 
 img.onload = init
 
 
 function init(){
-    ImgProc = new ImageProcessing(img, '.after_canvas > canvas')
+    console.log(img);
+    ImgProc = new ImageProcessing(img, '.pre_canvas > canvas', ".after_canvas > canvas");
     // ImgProc.brightness(100).apply()
     red.onchange = runPipeline
     green.onchange = runPipeline
     blue.onchange = runPipeline
     brightness.onchange = runPipeline
     threshold.onchange = runPipeline
-    grayscale.onclick = runPipeline.bind(grayscale)
- 
+    grayscale.onclick = runPipeline.bind(grayscale);
+    compress.onclick = runPipeline.bind(compress);
+
+    before.onclick = showCanvas.bind(before);
+    after.onclick = showCanvas.bind(after);
+}
+
+
+var before_canvas = document.querySelector(".pre_canvas");
+var after_canvas = document.querySelector(".after_canvas");
+
+function showCanvas(){
+    if(before.classList.contains("active")){
+        before_canvas.classList.remove("d-none");
+        after_canvas.classList.add('d-none');
+    }
+    else if(after.classList.contains("active")){
+        after_canvas.classList.remove("d-none");
+        before_canvas.classList.add('d-none');
+    }
 }
 
 // mỗi khi input thay đổi gì thì chạy hàm này 
 function runPipeline (){
-
     //gắn lại sự kiện onlick toggle ở trên phần giao diện do ở dưới bị ghi đè bởi pipeline
     console.log(this.tagName);
     if(this.tagName == 'A'){
@@ -154,15 +201,28 @@ function runPipeline (){
     let redFilter = Number(red.value)
     let greenFilter = Number(green.value)
     let blueFilter = Number(blue.value)
+    let qlty = Number(quality.value)
 
     //chạy các hàm ở đây
-
-    if(grayscale.classList.contains('active')){
+    console.log(grayscale);
+    console.log(compress);
+    if(compress.classList.contains("active")){
+        console.log("encoder");
+        let jpegURI = ImgProc.encoder.encode(qlty);         
+    }
+    else if(grayscale.classList.contains('active')){
         console.log('xử lý grayscale');
         ImgProc.grayScale().apply()
     }else{
+        console.log("else");
         ImgProc.brightness(brightnessFilter).apply()
     }
+    // chạy xong phải chuyển canvas after;
+    // TODO
+    before.classList.remove("active");
+    after.classList.add("active");
+    before_canvas.classList.add("d-none");
+    after_canvas.classList.remove("d-none");
     
 
 }
