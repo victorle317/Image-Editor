@@ -53,6 +53,10 @@ class ImageProcessing {
     }
     init() {
         // gắn các hàm vào filters , để ở đây tạo api luôn
+        this.filters.redScale = this.redScale;
+        this.filters.greenScale = this.redScale;
+        this.filters.blueScale = this.redScale;
+
         this.filters.grayScale = this.grayScale
         this.filters.brightness = this.brightness
         this.filters.threshold = this.threshold
@@ -62,6 +66,46 @@ class ImageProcessing {
     apply() {
         this.outCtx.putImageData(this.outputData, 0, 0);
     }
+
+    redScale = function (adjustment) {
+        // console.log(this)
+        let tmp = [...this.imgData.data];
+        let output = this.outputData.data;
+        for (let i = 0; i < tmp.length; i += 4) {
+            tmp[i] += adjustment;
+            output[i] = tmp[i];
+        }
+        // console.log(pixels);
+        // console.log(output);
+        return this;
+    }.bind(this);
+
+    greenScale = function (adjustment) {
+        // console.log(this)
+        let tmp = [...this.imgData.data];
+        let output = this.outputData.data;
+        for (let i = 0; i < tmp.length; i += 4) {
+            tmp[i+1] += adjustment;
+            output[i + 1] = tmp[i + 1];
+        }
+        // console.log(pixels);
+        // console.log(output);
+        return this;
+    }.bind(this);
+
+    blueScale = function (adjustment) {
+        // console.log(this)
+        let tmp = [...this.imgData.data];
+        let output = this.outputData.data;
+        for (let i = 0; i < tmp.length; i += 4) {
+            tmp[i + 2] += adjustment;
+            output[i + 2] = tmp[i + 2];
+        }
+        // console.log(pixels);
+        // console.log(output);
+        return this;
+    }.bind(this);
+
 
     // bind this để bảo function, cái this ở trong function là object Imgprocessing chứ ko phải là CHÍNH CÁI FUNCTION đó và cái Object filters như trong kiểu khai báo brightness(){}
     grayScale = function () {

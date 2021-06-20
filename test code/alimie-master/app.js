@@ -167,12 +167,16 @@ function init(){
     threshold.onchange = runPipeline
     grayscale.onclick = runPipeline.bind(grayscale);
     compress.onclick = runPipeline.bind(compress);
-
     before.onclick = showCanvas.bind(before);
     after.onclick = showCanvas.bind(after);
+
+
+    before_brightness = Number(brightness.value);
+    before_red = Number(red.value)
+    before_blue = Number(blue.value)
+    before_green = Number(green.value)
+
 }
-
-
 var before_canvas = document.querySelector(".pre_canvas");
 var after_canvas = document.querySelector(".after_canvas");
 
@@ -187,6 +191,12 @@ function showCanvas(){
     }
 }
 
+
+
+var before_red = 0;
+var before_green = 0;
+var before_blue = 0;
+var before_brightness = 0;
 // mỗi khi input thay đổi gì thì chạy hàm này 
 function runPipeline (){
     //gắn lại sự kiện onlick toggle ở trên phần giao diện do ở dưới bị ghi đè bởi pipeline
@@ -203,9 +213,6 @@ function runPipeline (){
     let blueFilter = Number(blue.value)
     let qlty = Number(quality.value)
 
-    //chạy các hàm ở đây
-    console.log(grayscale);
-    console.log(compress);
     if(compress.classList.contains("active")){
         console.log("encoder");
         let jpegURI = ImgProc.encoder.encode(qlty);         
@@ -214,8 +221,22 @@ function runPipeline (){
         console.log('xử lý grayscale');
         ImgProc.grayScale().apply()
     }else{
-        console.log("else");
-        ImgProc.brightness(brightnessFilter).apply()
+        if(redFilter != before_red){
+            ImgProc.redScale(redFilter).apply()
+            before_red = redFilter;
+        }
+        else if(greenFilter != before_green){
+            ImgProc.greenScale(greenFilter).apply()
+            before_green = greenFilter;
+        }
+        else if(blueFilter != before_blue){
+            ImgProc.blueScale(blueFilter).apply()
+            before_blue = blueFilter;
+        }
+        else if(brightnessFilter != before_brightness){
+            ImgProc.brightness(brightnessFilter).apply()
+        }
+        console.log("KO 1 cái nào");
     }
     // chạy xong phải chuyển canvas after;
     // TODO
