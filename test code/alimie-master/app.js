@@ -220,7 +220,9 @@ var before_red = 0;
 var before_green = 0;
 var before_blue = 0;
 var before_brightness = 0;
-var before_threshold =0
+var before_threshold =0;
+var before_quality = 0;
+var checkString = "";
 // mỗi khi input thay đổi gì thì chạy hàm này 
 function runPipeline (){
     //gắn lại sự kiện onlick toggle ở trên phần giao diện do ở dưới bị ghi đè bởi pipeline
@@ -238,18 +240,32 @@ function runPipeline (){
     let thresholdFilter = Number(threshold.value)
     let qlty = Number(quality.value)
 
-    if(compress.classList.contains("active")){
-        console.log("encoder");
-        uri = ImgProc.encoder.encode(qlty);         
+
+    if(compress.classList.contains("active") ){
+        if(qlty != before_quality){
+            console.log("encoder");
+            uri = ImgProc.encoder.encode(qlty);         
+            checkString = "compress";
+            before_quality = qlty;
+        }
+        else if(checkString != "compress"){
+            console.log("encoder");
+            uri = ImgProc.encoder.encode(qlty);         
+            checkString = "compress";
+            before_quality = qlty;
+        }
+ 
     }
-    else if(graybalance.classList.contains("active")){
+    else if(graybalance.classList.contains("active") && checkString != "graybalance"){
         console.log('xử lý gray balance');
-        ImgProc.grayBalance().apply()
+        ImgProc.grayBalance().apply();
+        checkString = "graybalance";
     }
-    else if(grayscale.classList.contains('active')){
+    else if(grayscale.classList.contains('active') && checkString != "grayscale"){
         console.log('xử lý grayscale');
-        ImgProc.grayScale().apply()
-    }else{
+        ImgProc.grayScale().apply();
+        checkString = "grayscale";
+    }else {
         if(redFilter != before_red){
             ImgProc.redScale(redFilter).apply()
             before_red = redFilter;

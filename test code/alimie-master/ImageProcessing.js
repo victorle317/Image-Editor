@@ -234,50 +234,50 @@ class ImageProcessing {
         }
         // console.log(ImgCDF);
         // thống kê lại sau khi grayBalance
-        let ImgStatistic2 = {};
-        for (var i = 0; i < pixels.length; i += 4) {
-            var r = pixels[i];
-            if (r in ImgStatistic2) {
-                ImgStatistic2[r]++;
-            } else {
-                ImgStatistic2[r] = 1;
-            }
-        }
+        // let ImgStatistic2 = {};
+        // for (var i = 0; i < pixels.length; i += 4) {
+        //     var r = pixels[i];
+        //     if (r in ImgStatistic2) {
+        //         ImgStatistic2[r]++;
+        //     } else {
+        //         ImgStatistic2[r] = 1;
+        //     }
+        // }
         // arr1, arr2 để vẽ bảng histogram https://jsfiddle.net/mushigh/18b1vun9/5/
         // truyền vào cái data;
-        let arr1 = new Array(256);
-        let arr2 = new Array(256);
-        for (let i = 0; i < arr1.length; i++) {
-            if (i in ImgStatistic) {
-                arr1[i] = ImgStatistic[i]
-            }
-            else {
-                arr1[i] = 0;
-            }
-            if (i in ImgStatistic2) {
-                arr2[i] = ImgStatistic2[i];
-            }
-            else {
-                arr2[i] = 0;
-            }
-        }
+        // let arr1 = new Array(256);
+        // let arr2 = new Array(256);
+        // for (let i = 0; i < arr1.length; i++) {
+        //     if (i in ImgStatistic) {
+        //         arr1[i] = ImgStatistic[i]
+        //     }
+        //     else {
+        //         arr1[i] = 0;
+        //     }
+        //     if (i in ImgStatistic2) {
+        //         arr2[i] = ImgStatistic2[i];
+        //     }
+        //     else {
+        //         arr2[i] = 0;
+        //     }
+        // }
 
-        console.log(JSON.stringify(arr1));
-        console.log(JSON.stringify(arr2))
+        // console.log(JSON.stringify(arr1));
+        // console.log(JSON.stringify(arr2))
 
-        console.log("THỐNG KÊ LẠI")
-        console.log("STATISTIC:");
-        console.log(ImgStatistic);
-        console.log("PDF: ");
-        console.log(ImgPDF);
-        console.log("CDF: ");
-        console.log(ImgCDF);
-        console.log("New value is:");
-        console.log(newImgData);
-        console.log("Lưu ảnh:")
-        console.log(pixels);
-        console.log("STATISTIC2:");
-        console.log(ImgStatistic2);
+        // console.log("THỐNG KÊ LẠI")
+        // console.log("STATISTIC:");
+        // console.log(ImgStatistic);
+        // console.log("PDF: ");
+        // console.log(ImgPDF);
+        // console.log("CDF: ");
+        // console.log(ImgCDF);
+        // console.log("New value is:");
+        // console.log(newImgData);
+        // console.log("Lưu ảnh:")
+        // console.log(pixels);
+        // console.log("STATISTIC2:");
+        // console.log(ImgStatistic2);
 
         return this;
     }.bind(this);
