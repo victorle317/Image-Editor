@@ -41,7 +41,7 @@ $('.adjust_bar').mouseleave(function(){
             el.classList.remove('nav_link_enter')
         }
     })
-    // $('.adjust_bar').removeClass('adjust_bar_hover')
+    $('.adjust_bar').removeClass('adjust_bar_hover')
 })
 
 // $('.tool_bar').hover(function () {
@@ -71,34 +71,37 @@ function Input_change() {
 }
 
 Input_change()
-
+setTimeout(removeLoader,'3700')
+function removeLoader() {
+    $('.awesomeLoader').fadeOut()
+}
 // fix bug (tạm vậy :v)
 $('.side_bar').addClass('side_bar_toggle')
 
 //gắn event listener cho từng nút apply thêm class active mỗi khi bấm
 var apply_button = document.querySelectorAll('.apply')
-console.log(apply_button);
+// console.log(apply_button);
 apply_button.forEach((e)=>{
-    console.log(apply_button);
+    // console.log(apply_button);
     e.addEventListener("click", function(){
         apply_button.forEach((ele)=>{
             ele.classList.remove('active');
         })
         e.classList.add('active');
-        console.log(e);
+        // console.log(e);
     })
 })
 
 
 var before_after = document.querySelectorAll('.apply-bf-at')
-console.log(before_after);
+// console.log(before_after);
 before_after.forEach((e)=>{
     e.addEventListener("click", function(){
         before_after.forEach((ele)=>{
             ele.classList.remove('active');
         })
         e.classList.add('active');
-        console.log(before_after);
+        // console.log(before_after);
     })
 })
 //-------------------------  Các hàm xử lý ở dưới đây, trên chỉ là giao diện---------------------------------
@@ -160,25 +163,27 @@ fileinput.onchange = function (e) {
 function save_inp_changes (){
     // console.log(1);
     if (inp_type == 'file') {
-        console.log(fileinput.files);
+        // console.log(fileinput.files);
         img.src = buff_file
         // img.src = URL.createObjectURL(fileinput.files[0])
     } else {    
         img.src = document.querySelector('#url').value
         
     }
+
     // set canvas before active// todo
     before.classList.add("active");
     after.classList.remove("active");
     before_canvas.classList.remove("d-none");
     after_canvas.classList.add("d-none");
+    $('.modal').modal('hide')
 }
 // khi nào img load xong thì chạy init, fix được lỗi width = 0 
 img.onload = init
 
 
 function init(){
-    console.log(img);
+    // console.log(img);
     ImgProc = new ImageProcessing(img, '.pre_canvas > canvas', ".after_canvas > canvas");
     // ImgProc.brightness(100).apply()
     red.onchange = runPipeline
@@ -225,11 +230,6 @@ var before_quality = 0;
 var checkString = "";
 // mỗi khi input thay đổi gì thì chạy hàm này 
 function runPipeline (){
-    //gắn lại sự kiện onlick toggle ở trên phần giao diện do ở dưới bị ghi đè bởi pipeline
-    // console.log(this.tagName);
-    // if(this.tagName == 'A'){
-    //     this.classList.toggle('active')
-    // }
 
 
     let brightnessFilter = Number(brightness.value)
@@ -243,13 +243,13 @@ function runPipeline (){
 
     if(compress.classList.contains("active") ){
         if(qlty != before_quality){
-            console.log("encoder");
+            console.log("Encoding ...");
             uri = ImgProc.encoder.encode(qlty);         
             checkString = "compress";
             before_quality = qlty;
         }
         else if(checkString != "compress"){
-            console.log("encoder");
+            console.log("Encoding ...");
             uri = ImgProc.encoder.encode(qlty);         
             checkString = "compress";
             before_quality = qlty;
@@ -297,7 +297,7 @@ function runPipeline (){
         console.log("KO 1 cái nào");
     }
     // chạy xong phải chuyển canvas after;
-    // TODO
+
     before.classList.remove("active");
     after.classList.add("active");
     before_canvas.classList.add("d-none");
@@ -307,6 +307,6 @@ function runPipeline (){
     })
 
 }
-// runPipeline()
+console.clear()
 // tạo trước new image, về sau gắn link vào trong hàm save changes
 

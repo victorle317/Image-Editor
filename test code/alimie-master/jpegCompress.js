@@ -744,7 +744,7 @@ function JPEGEncoder(quality) {
 
             return data;
         }
-        console.log(byteout);
+        // console.log(byteout);
         var jpegDataUri = 'data:image/jpeg;base64,' + btoa(byteout.join(''));
 
         byteout = [];

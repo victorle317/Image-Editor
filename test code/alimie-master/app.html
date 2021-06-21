@@ -8,11 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Title -->
-    <title>App</title>
+    <title>Snapshot</title>
 
     <!-- Favicon -->
 
-    <link rel="icon" href="./img/core-img/favicon.png">
+    <link rel="icon" style="color: white;" href="./diaphragm.svg">
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
@@ -24,95 +24,18 @@
 </head>
 
 <body>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+    <div class="awesomeLoader" style="width:100%; height: 100vh; display: flex; justify-content: center; align-items: center; position: absolute; z-index: 6000;top: 0; background-color: white;">
+        <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_efenfp40.json" background="transparent" speed="1"
+            style="width: 300px; height: 300px;" loop autoplay></lottie-player>
+    </div>
+   
     <!-- Preloader -->
-    <div id="preloader">
+    <!-- <div id="preloader">
         <div class="loader"></div>
-    </div>
+    </div> -->
     <!-- /Preloader -->
-    <!-- Top Search Form Area -->
-    <div class="top-search-area">
-        <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <!-- Close -->
-                        <button type="button" class="btn close-btn" data-dismiss="modal"><i
-                                class="ti-close"></i></button>
-                        <!-- Form -->
-                        <form action="index.html" method="post">
-                            <input type="search" name="top-search-bar" class="form-control"
-                                placeholder="Search and hit enter...">
-                            <button type="submit">Search</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header Area Start -->
-    <header class="header-area d-none">
-        <!-- Main Header Start -->
-        <div class="main-header-area">
-            <div class="classy-nav-container breakpoint-off">
-                <div class="container">
-                    <!-- Classy Menu -->
-                    <nav class="classy-navbar justify-content-between" id="alimeNav">
-
-                        <!-- Logo -->
-                        <a class="nav-brand" href="./index.html"><img src="./img/core-img/logo.png" alt=""></a>
-
-                        <!-- Navbar Toggler -->
-                        <div class="classy-navbar-toggler">
-                            <span class="navbarToggler"><span></span><span></span><span></span></span>
-                        </div>
-
-                        <!-- Menu -->
-                        <div class="classy-menu">
-                            <!-- Menu Close Button -->
-                            <div class="classycloseIcon">
-                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
-                            </div>
-                            <!-- Nav Start -->
-                            <div class="classynav">
-                                <ul id="nav">
-                                    <li><a href="./index.html">Home</a></li>
-                                    <li><a href="#">Pages</a>
-                                        <ul class="dropdown">
-                                            <li><a href="./index.html">- Home</a></li>
-                                            <li><a href="./about.html">- About</a></li>
-                                            <li><a href="./gallery.html">- Gallery</a></li>
-                                            <li><a href="./blog.html">- Blog</a></li>
-                                            <li><a href="./single-blog.html">- Blog Details</a></li>
-                                            <li><a href="./contact.html">- Contact</a></li>
-                                            <li><a href="#">- Dropdown</a>
-                                                <ul class="dropdown">
-                                                    <li><a href="#">- Dropdown Item</a></li>
-                                                    <li><a href="#">- Dropdown Item</a></li>
-                                                    <li><a href="#">- Dropdown Item</a></li>
-                                                    <li><a href="#">- Dropdown Item</a></li>
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li class="active"><a href="./about.html">About</a></li>
-                                    <li><a href="./gallery.html">Gallery</a></li>
-                                    <li><a href="./blog.html">Blog</a></li>
-                                    <li><a href="./contact.html">Contact</a></li>
-                                </ul>
-
-                                <!-- Search Icon -->
-                                <div class="search-icon" data-toggle="modal" data-target="#searchModal"><i
-                                        class="ti-search"></i></div>
-                            </div>
-                            <!-- Nav End -->
-                        </div>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </header>
-    <!-- Header Area End -->
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
@@ -182,7 +105,7 @@
                             <a class="nav-link" href="#" data-toggle="modal" data-target="#exampleModalCenter">Open
                                 <span class="sr-only">(current)</span></a>
                         </li>
-                        <li class="nav-item mx-2 text-center Before">
+                        <li class="nav-item mx-2  Before">
                             <a class="nav-link apply-bf-at active" href="#"><span class="oi mr-1 d-none"
                                     data-glyph="arrow-left"></span>Before
 
@@ -209,7 +132,7 @@
                         </li>
 
                         <li class="nav-item mx-2 Save">
-                            <a class="nav-link save-btn-jpeg" href="#" tabindex="-1" aria-disabled="true">Save as JPEG(Compressed only)</a>
+                            <a class="nav-link save-btn-jpeg" href="#" tabindex="-1" aria-disabled="true">Save as JPEG (For Compression Only)</a>
                         </li>
                     </ul>
 
@@ -288,7 +211,7 @@
                     </div>
                 </form>
 
-                <div class="container mx-2 text-light" id="Compress">
+                <div class="container  mx-2 text-light" id="Compress">
 
                     <div class="form-group Compress">
                         <label for="Compression">Compression Quality</label>
@@ -304,8 +227,8 @@
                     </div>
 
                 </div>
-                <div class="container text-light" id="Filters">
-                    <div class="Grayscale card shadow " style="width: 17rem;" >
+                <div class="container  text-light" id="Filters">
+                    <div class="Grayscale my-2 card shadow " style="width: 17rem;" >
                         <img src="./test.jpg" class="card-img-top grayscale" alt="...">
                         <div class="card-body">
                             <h5 class="card-title">Grayscale</h5>
@@ -316,8 +239,8 @@
                         </div>
                     </div>
 
-                    <div class="Graybalance card shadow " style="width: 17rem;" >
-                        <img src="./test.jpg" class="card-img-top grayscale alt="...">
+                    <div class="Graybalance my-2 card shadow " style="width: 17rem;" >
+                        <img src="./test.jpg" class="card-img-top grayscale" style="filter: brightness(1.5) grayscale(1);" alt="">
                         <div class="card-body">
                             <h5 class="card-title">Gray Balance</h5>
                             <p class="card-text d-none">Some quick example text to build on the card title and make up
@@ -347,10 +270,6 @@
                 </div>
         </div>
     </section>
-
-
-
-
 
     <!-- **** All JS Files ***** -->
     <!-- jQuery 2.2.4 -->

@@ -22,8 +22,8 @@ class ImageProcessing {
         this.canvas = document.querySelector(beforeCanvasID);
         this.canvas2 = document.querySelector(afterCanvasID);
 
-        console.log(beforeCanvasID);
-        console.log(this.imgSrc.width, this.imgSrc.height);
+        // console.log(beforeCanvasID);
+        // console.log(this.imgSrc.width, this.imgSrc.height);
 
         this.ctx = this.canvas.getContext('2d');
         this.outCtx = this.canvas2.getContext('2d');
@@ -48,8 +48,8 @@ class ImageProcessing {
 
         // this.outputData = Object.assign({},this.imgData);
 
-        console.log(this.imgData);
-        console.log(this.outputData);
+        // console.log(this.imgData);
+        // console.log(this.outputData);
     }
     init() {
         // gắn các hàm vào filters , để ở đây tạo api luôn
@@ -546,17 +546,17 @@ class ImageProcessing {
             UVDC_HT = computeHuffmanTbl(std_dc_chrominance_nrcodes, std_dc_chrominance_values);
             YAC_HT = computeHuffmanTbl(std_ac_luminance_nrcodes, std_ac_luminance_values);
             UVAC_HT = computeHuffmanTbl(std_ac_chrominance_nrcodes, std_ac_chrominance_values);
-            console.log("0xF0 YAC:" + YAC_HT[0xF0])
-            console.log("0xF0 uVAC:" + UVAC_HT[0xF0])
-            console.log("------------------------------------");
-            console.log("YDC_HT");
-            console.log(YDC_HT);
-            console.log("YAC_HT");
-            console.log(YAC_HT);
-            console.log("UVDC_HT");
-            console.log(UVDC_HT);
-            console.log("UVAC_HT");
-            console.log(UVAC_HT);
+            // console.log("0xF0 YAC:" + YAC_HT[0xF0])
+            // console.log("0xF0 uVAC:" + UVAC_HT[0xF0])
+            // console.log("------------------------------------");
+            // console.log("YDC_HT");
+            // console.log(YDC_HT);
+            // console.log("YAC_HT");
+            // console.log(YAC_HT);
+            // console.log("UVDC_HT");
+            // console.log(UVDC_HT);
+            // console.log("UVAC_HT");
+            // console.log(UVAC_HT);
         }
 
         function initCategoryNumber() {
