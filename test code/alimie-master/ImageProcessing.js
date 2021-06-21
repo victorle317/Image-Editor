@@ -54,8 +54,8 @@ class ImageProcessing {
     init() {
         // gắn các hàm vào filters , để ở đây tạo api luôn
         this.filters.redScale = this.redScale;
-        this.filters.greenScale = this.redScale;
-        this.filters.blueScale = this.redScale;
+        this.filters.greenScale = this.greenScale;
+        this.filters.blueScale = this.blueScale;
 
         this.filters.grayScale = this.grayScale
         this.filters.brightness = this.brightness
