@@ -269,21 +269,30 @@ function runPipeline (){
         if(redFilter != before_red){
             ImgProc.redScale(redFilter).apply()
             before_red = redFilter;
+            checkString = "";
         }
         else if(greenFilter != before_green){
             ImgProc.greenScale(greenFilter).apply()
             before_green = greenFilter;
+            checkString = "";
+            
         }
         else if(blueFilter != before_blue){
             ImgProc.blueScale(blueFilter).apply()
             before_blue = blueFilter;
+            checkString = "";
+
         }
         else if(brightnessFilter != before_brightness){
             ImgProc.brightness(brightnessFilter).apply()
             before_brightness = brightnessFilter
+            checkString = "";
+
         } else if (thresholdFilter != before_threshold ){
             ImgProc.threshold(thresholdFilter).apply()
             before_threshold = thresholdFilter
+            checkString = "";
+
         }
         console.log("KO 1 cái nào");
     }
