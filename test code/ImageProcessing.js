@@ -251,6 +251,7 @@ class ImageProcessing {
     return this;
   }.bind(this);
    // truyền mặc định tham sô pixels 
+   
 }
 
 setTimeout(()=>{
